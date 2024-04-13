@@ -40,13 +40,11 @@ python run_novorank.py .\test\config_for_reviewer.txt
 
 ## How to use NovoRank
 
-To use NovoRank for your datasets, you HAVE TO train your own model fitting to your datasets.
-
 ### Step 1. Preparation datasets
 As an initial step, a user MUST make their datasets to fit NovoRank input standard.
 
 #### De novo search result
-Once you perform de novo search using any tools such as PEAKS, pNovo3 and DeepNovo, you MUST convert the result to below form:
+Once you perform de novo search using any tools such as PEAKS, pNovo3 and Casanovo, you MUST convert the result to below form:
 
 Source File|Scan number|Peptide|Score
 ---|---|---|---|
