@@ -1,4 +1,4 @@
-### NovoRank: Refinement for De Novo Peptide Sequencing Based on Spectral Clustering and Deep Learning
+# NovoRank: Refinement for De Novo Peptide Sequencing Based on Spectral Clustering and Deep Learning
 NovoRank is a post-processing tool that employs spectral clustering and machine learning techniques to assign more plausible peptide sequences to spectra.
 
 - NovoRank is implemented and tested with
