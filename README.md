@@ -1,6 +1,16 @@
 # NovoRank: Refinement for De Novo Peptide Sequencing Based on Spectral Clustering and Deep Learning
-NovoRank is a post-processing tool that employs spectral clustering and machine learning techniques to assign more plausible peptide sequences to spectra.
 
+NovoRank is a post-processing tool designed to improve the accuracy of de novo peptide sequencing in proteomics. Unlike database-dependent methods, de novo sequencing derives peptide sequences directly from tandem mass spectrometry (MS/MS) data, enabling the discovery of novel peptides. However, reliance on incomplete scoring functions often leads to incorrect identifications. NovoRank addresses this by re-ranking candidate peptides to recover correct identifications, enhancing both precision and recall. By reassigning the optimal peptide from diverse de novo sequencing results, NovoRank offers a robust solution for overcoming the noise and ambiguities inherent in MS/MS data.
+
+For detailed insights behind NovoRank, refer to the NovoRank paper.
+
+<p align="center">
+    <img src="assets/Architecture.tif" width="750"\>
+</p>
+
+<hr>
+
+## Requirements
 - NovoRank is implemented and tested with
 
 Python==3.9 \
