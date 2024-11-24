@@ -12,6 +12,35 @@ For detailed insights behind NovoRank, refer to the [NovoRank paper]().
 <hr>
 
 ## Overview
+#### Code structure
+``` Unicode
+NovoRank
+  │ 
+  ├── src
+  │    │     
+  │    ├── finetuned_models: BERT finetuned on downstream tasks
+  │    │      
+  │    ├── lib
+  │    │     ├── agent.py: code for agent
+  │    │     ├── memory.py: code for memory
+  │    │     └── reward.py: code for reward
+  │    │  
+  │    ├── script: script for training and evaluating a pruned BERT on downstream tasks
+  │    │ 
+  │    ├─── utils
+  │    │     ├── default_param.py: default cfgs
+  │    │     └── utils.py: utility functions
+  │    │ 
+  │    ├─── transformers: refer to https://github.com/huggingface/transformers/
+  │    │     
+  │    ├─── main.py: main file to run Automated-BERT-Regularization
+  │    │    
+  │    └─── train.py: code for training the agent
+  │
+  ├─── data: GLUE data
+  │
+  └─── script: shell scripts for demo
+```
 
 ## Requirements
 
