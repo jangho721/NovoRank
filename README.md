@@ -4,25 +4,36 @@ NovoRank is a post-processing tool designed to improve the accuracy of de novo p
 
 For detailed insights behind NovoRank, refer to the NovoRank paper.
 
+<br>
+
 <p align="center">
-    <img src="assets/Architecture.tif" width="750"\>
+    <img src="assets/img.png" width="700"\>
 </p>
 
 <hr>
 
 ## Requirements
-- NovoRank is implemented and tested with
 
-Python==3.9 \
-requirements.txt
+NovoRank is implemented and tested with the following dependencies:
 
-and
+### Software and Libraries:
+- Python == 3.9
+- [DeepLC](https://github.com/compomics/DeepLC)
+- [MS-Cluster](http://proteomics.ucsd.edu/software-tools/ms-clusterarchives)
+- CometX ( In-house software modified to calculate XCorr, based on Comet software )
 
-DeepLC ( https://github.com/compomics/DeepLC ) \
-MS-Cluster ( http://proteomics.ucsd.edu/software-tools/ms-clusterarchives ) \
-CometX.exe ( this is in-house software modified to calculate XCorr only. The implementation is based on the Comet software )
+### To install the required Python packages:
 
-All data used in the experiment can be downloaded from the 'sample' folder in the NovoRank GitHub repository and https://drive.google.com/drive/folders/13jir3-QLcAVGtUe84Tfp5utctnHRI-5Q?usp=share_link.
+1. Clone the repository or download the code.
+2. Install the dependencies listed in `requirements.txt`:
+
+```c
+pip install -r requirements.txt
+```
+
+## Datasets
+
+All datasets used in this work are available for download from [Zenodo](https://zenodo.org/records/14046459).
 
 ## Quick start for potential reviewers
 
