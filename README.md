@@ -99,6 +99,9 @@ All datasets used in this work are available for download from [Zenodo](https://
 - The gating results are added to the last column, named 'Gated'.
 </pre>
 
+## Credits
+NovoRank is created by <a href="https://jangho721.github.io/" target="_blank">Jangho Seo</a>, Seunghyuk Choi, and Eunok Paek.
+
 ## Citation
 ```bibTeX
 @article{sep2024novorank,
