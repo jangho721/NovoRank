@@ -20,7 +20,7 @@ NovoRank is implemented and tested with the following dependencies:
 - Python == 3.9
 - [DeepLC](https://github.com/compomics/DeepLC)
 - [MS-Cluster](http://proteomics.ucsd.edu/software-tools/ms-clusterarchives)
-- CometX (In-house software modified to calculate XCorr, based on Comet software)
+- [CometX](https://github.com/jangho721/NovoRank/tree/main/software/CometX) (In-house software modified to calculate XCorr, based on Comet software)
 <br>
 
 ### To install the required Python packages:
