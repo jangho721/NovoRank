@@ -37,9 +37,9 @@ NovoRank
   │    │    
   │    └─── train.py: code for training the agent
   │
-  ├─── data: GLUE data
+  ├─── assets: GLUE data
   │
-  └─── script: shell scripts for demo
+  └─── software: shell scripts for demo
 ```
 
 ## Requirements
@@ -122,4 +122,4 @@ NovoRank is created by <a href="https://jangho721.github.io/" target="_blank">Ja
 </pre>
 
 ## Contact
-If you have any questions, feel free to [open an issue](https://github.com/poloclub/transformer-explainer/issues/new/choose) or contact [Jangho Seo](https://jangho721.github.io/) or any of the contributors listed above.
+If you have any questions, feel free to [open an issue](https://github.com/jangho721/NovoRank/issues/new) or contact [Jangho Seo](https://jangho721.github.io/) or any of the contributors listed above.
