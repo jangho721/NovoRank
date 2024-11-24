@@ -100,7 +100,7 @@ All datasets used in this work are available for download from [Zenodo](https://
 </pre>
 
 ## Credits
-NovoRank is created by <a href="https://jangho721.github.io/" target="_blank">Jangho Seo</a>, Seunghyuk Choi, and Eunok Paek.
+NovoRank is created by <a href="https://jangho721.github.io/" target="_blank">Jangho Seo</a>, Seunghyuk Choi, and Eunok Paek at the Hanyang University.
 
 ## Citation
 ```bibTeX
