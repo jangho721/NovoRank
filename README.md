@@ -108,7 +108,7 @@ NovoRank is created by <a href="https://jangho721.github.io/" target="_blank">Ja
   title = {NovoRank: Refinement for De Novo Peptide Sequencing Based on Spectral Clustering and Deep Learning},
   shorttitle = {NovoRank},
   author = {Seo, Jangho and Choi, Seunghyuk and Paek, Eunok},
-  journal={},
+  journal={Journal of Proteome Research},
   year={2024}
 }
 ```
