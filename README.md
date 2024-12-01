@@ -20,9 +20,9 @@ NovoRank
   │ 
   ├── src
   │    │     
-  │    ├── finetuned_models: BERT finetuned on downstream tasks
+  │    ├── features: BERT finetuned on downstream tasks
   │    │      
-  │    ├── lib
+  │    ├── loader
   │    │     ├── agent.py: code for agent
   │    │     ├── memory.py: code for memory
   │    │     └── reward.py: code for reward
