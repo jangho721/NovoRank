@@ -48,11 +48,14 @@ if __name__ == '__main__':
     logging.info('Starting feature extraction process.')
     feature_transformer = FeatureTransformer(new_dataset)
     transformed_dataset = feature_transformer.generate_features()
-    logging.info('Feature extraction process completed successfully.')
 
-    denoised_mgf = process.SpectrumNoiseRemoverProcess(config_data)
+    # Processing spectra to extract internal fragment ion features
+    logging.info("Starting the spectrum denoising process.")
+    denoised_mgf = process.SpectrumNoiseRemoveProcess(config_data)
     denoised_mgf.prepare_directory()
     denoised_mgf.execute()
+    logging.info("Spectrum denoising process completed successfully.")
+    logging.info('Feature extraction process completed successfully.')
 
     # Save the intermediate DataFrame as a CSV file
     logging.info("Starting to save the new dataset as CSV...")
@@ -62,6 +65,4 @@ if __name__ == '__main__':
     if config_data['params']['top_10']:
         pass
 
-
-# -> input, 타입 지정
-#
+# -> input: 타입 지정

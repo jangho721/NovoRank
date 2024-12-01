@@ -208,19 +208,36 @@ class GenerateNewCandidateProcess:
         return new_dataset, dataset_top1
 
 
-class SpectrumNoiseRemoverProcess:
+class SpectrumNoiseRemoveProcess:
     def __init__(self, config):
-        self.mgf_directory = config['path']['mgf_path']
-        self.save_directory = config['path']['denoised_mgf_path']
-        self.instance = MGFNoiseRemover(self.mgf_directory, self.save_directory)
+
+        """
+        Initialize the SpectrumNoiseRemoverProcess with configuration settings.
+        """
+
+        self.mgf_directory = config['path']['mgf_path']  # Path to the directory containing original MGF files.
+        self.save_directory = config['path']['denoised_mgf_path']  # Path to the directory for saving denoised MGF files.
+        self.instance = MGFNoiseRemover(self.mgf_directory, self.save_directory)  # Create an MGFNoiseRemover instance.
 
     def prepare_directory(self):
 
-        if os.path.exists(self.save_directory):
-            shutil.rmtree(self.save_directory)
-        os.mkdir(self.save_directory)
+        """
+        Prepare the output directory for saving denoised MGF files.
+
+        If the directory already exists, it is removed and recreated to ensure a clean state.
+        """
+
+        if os.path.exists(self.save_directory):  # Check if the output directory exists.
+            shutil.rmtree(self.save_directory)  # Remove the directory if it exists.
+        os.mkdir(self.save_directory)  # Create a fresh output directory.
 
     def execute(self):
 
-        # 노이즈 제거한 mgf : 100Da 상위 10개 픽
+        """
+        Execute the noise removal process for all original MGF files.
+
+        Saves the denoised spectra to the specified output directory.
+        """
+
+        # denoised MGF files: Each file contains spectra where only the top 10 peaks are retained within every 100 Da window.
         self.instance.generate_noise_removed_mgf()

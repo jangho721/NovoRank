@@ -389,7 +389,7 @@ class MGFNoiseRemover:
     def __init__(self, mgf_directory, save_directory):
 
         """
-        Initialize the MGFNoiseRemover with the directories for MGF files and the save location.
+        Initialize the MGFNoiseRemover with the directories for MGF files and the denoised MGF save location.
 
         :param mgf_directory: Path to the directory containing the MGF files.
         :param save_directory: Path to the directory where the cleaned MGF files will be saved.
@@ -401,7 +401,8 @@ class MGFNoiseRemover:
     def generate_noise_removed_mgf(self):
 
         """
-        스팩트럼의 노이즈 픽을 제거하고 노이즈를 제거한 새로운 스팩트럼 파일(.mgf)을 저장하는 함수
+        Iterate through all MGF files in the input directory,
+        process each spectrum to remove noise peaks, and save the denoised MGF files in the specified directory.
         """
 
         mgf_list = os.listdir(self.mgf_directory)
@@ -412,79 +413,113 @@ class MGFNoiseRemover:
     def process_mgf_file(self, filename):
 
         """
-        하나의 MGF 파일을 읽고, 노이즈 제거 후 새로운 파일(_remove.mgf)로 저장
+        Process a single MGF file: read its content, remove noise from spectra,
+        and save the denoised data into a new file (with _remove added to the filename).
+
+        :param filename: Name of the MGF file to process.
         """
 
         input_path = os.path.join(self.mgf_directory, filename)
         output_path = os.path.join(self.save_directory, f"{filename[:-4]}_remove.mgf")
 
+        # Read input file content
         with open(input_path, 'r') as infile:
             data = infile.readlines()
 
+        # Process the spectra and write denoised data to output file
         with open(output_path, 'w') as outfile:
             self.process_spectra(data, outfile)
 
     def process_spectra(self, data, outfile):
 
         """
-        스펙트럼 데이터에서 노이즈를 제거하고 출력 파일에 기록
+        Process the spectra data: remove noise, and write the denoised data to output.
+
+        :param data: List of lines from the input MGF file.
+        :param outfile: Output file object to write the denoised data.
         """
 
         peak_list = []
-        window_min, window_max = 0, 100
+        window_min, window_max = 0, 100  # Initial window
 
         for line in data:
-            # BEGIN IONS 로 시작하는 줄
+            # Start of a spectrum
             if line.startswith('BEGIN IONS'):
+                # Reset the peak list for a new spectrum
                 peak_list = []
+                # Reset the window range
                 window_min, window_max = 0, 100
+                # Write the line to output file
                 outfile.write(line)
-            # END IONS 로 시작하는 줄
+            # End of a spectrum
             elif line.startswith('END IONS'):
+                # Process the peaks
                 self.process_peaks(peak_list, outfile)
+                # Write the line to output file
                 outfile.write(line)
             else:
-                # 숫자로 시작하는 줄
+                # Line contains a peak (mass-to-charge ratio and intensity)
                 if line.strip() and line.split()[0].replace('.', '', 1).isdigit():
+                    # Parse the mass-to-charge ratio (m/z)
                     mz = float(line.split()[0])
                     if mz <= window_max:
+                        # Add the peak to the current list
                         peak_list.append(line)
                     else:
+                        # Adjust the window range to include the new peak
                         window_min, window_max = self.adjust_window(mz, window_min, window_max)
 
+                        # If there are no peaks in the current list, initialize it with the new peak
                         if len(peak_list) == 0:
                             peak_list = [line]
                             continue
 
+                        # Process and write the current peaks, then reset for the new peak
                         self.process_peaks(peak_list, outfile)
-                        # 초기화
                         peak_list = [line]
 
-                # 숫자로 시작하지 않는 줄
+                # Non-peak lines (metadata) are directly written to the output
                 else:
                     outfile.write(line)
 
     def process_peaks(self, peak_list, outfile):
-        """END IONS를 만났을 때 temp 리스트의 피크를 처리하여 outfile에 기록"""
-        # peak_list가 10개 이상의 피크를 가진 경우 노이즈 제거
+
+        """
+        Process the peaks in the current spectrum: remove noise from the peaks within the m/z window range and write the denoised peaks.
+
+        :param peak_list: List of peaks within the m/z window range in the current spectrum.
+        :param outfile: Output file object to write the denoised peaks.
+        """
+
+        # Remove noise if there are more than 10 peaks
         if len(peak_list) > 10:
             peak_list = self.remove_noise_peak_keep_order(peak_list)
 
-        # peak_list의 모든 피크를 outfile에 기록
+        # Write all peaks to the output file
         for peak in peak_list:
             outfile.write(peak)
 
     @staticmethod
     def remove_noise_peak_keep_order(peak_list):
 
+        """
+        Remove the least intense peaks one by one, ensuring only the top 10 peaks remain while maintaining the order of peaks.
+
+        :param peak_list: List of peaks to process.
+        :return: Denoised list of peaks with exactly 10 peaks.
+        """
+
         intensity_list = [float(line.strip().split()[1]) for line in peak_list]
 
+        # Keep removing the lowest intensity peak until only 10 peaks remain
         while len(peak_list) > 10:
-            # 최소 intensity의 인덱스 찾기
+            # Find the index of the lowest intensity
             min_index = intensity_list.index(min(intensity_list))
 
-            # 해당 인덱스의 항목 제거
+            # Remove the corresponding peak
             peak_list.pop(min_index)
+
+            # Remove the intensity value
             intensity_list.pop(min_index)
 
         return peak_list
@@ -493,9 +528,15 @@ class MGFNoiseRemover:
     def adjust_window(mz, window_min, window_max):
 
         """
-        mz 값에 맞게 window_min과 window_max를 조정하는 함수
+        Adjust the m/z window range to accommodate a new peak.
+
+        :param mz: Mass-to-charge ratio of the new peak.
+        :param window_min: Current minimum of the window.
+        :param window_max: Current maximum of the window.
+        :return: Updated window_min and window_max.
         """
 
+        # Increment the window by 100 until the m/z fits in the range
         while mz > window_max:
             window_min += 100
             window_max += 100
