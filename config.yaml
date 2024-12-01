@@ -1,0 +1,17 @@
+# config.yaml
+
+path:
+  cluster_path: ./data/external/mscluster
+  mgf_path: ./data/raw
+  search_results:
+    de_novo:
+      path: ./data/external/denovo
+      filename: PXD014222_Casanovo.csv
+    db:
+      path: ./data/external/db
+      filename: PXD014222_db.csv
+  save_path: ./data/interim
+  denoised_mgf_path: ./data/processed
+params:
+  train: True
+  top_10: False
