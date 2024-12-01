@@ -16,6 +16,8 @@ For detailed insights behind NovoRank, refer to the [NovoRank paper]().
 ``` Unicode
 NovoRank
   │ 
+  ├── generate_candidates_and_extract_features.py
+  │ 
   ├── src
   │    │     
   │    ├── finetuned_models: BERT finetuned on downstream tasks
@@ -37,7 +39,9 @@ NovoRank
   │    │    
   │    └─── train.py: code for training the agent
   │
-  ├─── assets: GLUE data
+  ├─── models: GLUE data
+  │
+  ├─── pretrained: GLUE data
   │
   └─── software: shell scripts for demo
 ```
