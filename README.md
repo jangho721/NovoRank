@@ -21,18 +21,18 @@ NovoRank
   ├── src
   │    │     
   │    ├── features: BERT finetuned on downstream tasks
-  │    │      
+  │    │     └── FeatureProcessor.py: code for reward
+  │    │       
   │    ├── loader
-  │    │     ├── agent.py: code for agent
-  │    │     ├── memory.py: code for memory
-  │    │     └── reward.py: code for reward
+  │    │     └── dataloader.py: code for reward
   │    │  
   │    ├── script: script for training and evaluating a pruned BERT on downstream tasks
   │    │ 
   │    ├─── utils
-  │    │     ├── default_param.py: default cfgs
+  │    │     ├── config.py: default cfgs
+  │    │     ├── process.py: utility functions
   │    │     └── utils.py: utility functions
-  │    │ 
+  │    │
   │    ├─── transformers: refer to https://github.com/huggingface/transformers/
   │    │     
   │    ├─── main.py: main file to run Automated-BERT-Regularization
