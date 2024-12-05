@@ -442,6 +442,9 @@ class MGFNoiseRemover:
         peak_list = []
         window_min, window_max = 0, 100  # Initial window
 
+        process_peaks = self.process_peaks
+        adjust_window = self.adjust_window
+
         for line in data:
             # Start of a spectrum
             if line.startswith('BEGIN IONS'):
@@ -454,7 +457,7 @@ class MGFNoiseRemover:
             # End of a spectrum
             elif line.startswith('END IONS'):
                 # Process the peaks
-                self.process_peaks(peak_list, outfile)
+                process_peaks(peak_list, outfile)
                 # Write the line to output file
                 outfile.write(line)
             else:
@@ -467,7 +470,7 @@ class MGFNoiseRemover:
                         peak_list.append(line)
                     else:
                         # Adjust the window range to include the new peak
-                        window_min, window_max = self.adjust_window(mz, window_min, window_max)
+                        window_min, window_max = adjust_window(mz, window_min, window_max)
 
                         # If there are no peaks in the current list, initialize it with the new peak
                         if len(peak_list) == 0:
@@ -475,7 +478,7 @@ class MGFNoiseRemover:
                             continue
 
                         # Process and write the current peaks, then reset for the new peak
-                        self.process_peaks(peak_list, outfile)
+                        process_peaks(peak_list, outfile)
                         peak_list = [line]
 
                 # Non-peak lines (metadata) are directly written to the output
