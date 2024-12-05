@@ -47,6 +47,8 @@ if __name__ == '__main__':
 
     logging.info('Starting feature extraction process.')
     feature_transformer = FeatureTransformer(new_dataset)
+    feature_extraction = featureExtractor(config_data)
+
     transformed_dataset = feature_transformer.generate_features()
 
     # Processing spectra to extract internal fragment ion features
@@ -55,6 +57,11 @@ if __name__ == '__main__':
     denoised_mgf.prepare_directory()
     denoised_mgf.execute()
     logging.info("Spectrum denoising process completed successfully.")
+
+    logging.info("Starting internal fragment ion feature extraction.")
+    new_dataset = feature_extraction.internal_fragment_ion_features(transformed_dataset)
+    logging.info("Internal fragment ion feature extraction completed successfully.")
+
     logging.info('Feature extraction process completed successfully.')
 
     # Save the intermediate DataFrame as a CSV file
