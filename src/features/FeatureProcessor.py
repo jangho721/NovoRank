@@ -1,6 +1,7 @@
 import os
 import logging
 import numpy as np
+import pandas as pd
 
 from numba import jit
 from tqdm import tqdm
@@ -113,8 +114,8 @@ class featureExtractor:
         """
 
         # Separate data into those with missing sequences and those with sequences
-        dataset_missing_sequence = dataset[dataset['Sequence'].isnull()]
-        dataset_with_sequence = dataset[dataset['Sequence'].notnull()]
+        dataset_missing_sequence = dataset[dataset['Sequence'].isnull()].copy()
+        dataset_with_sequence = dataset[dataset['Sequence'].notnull()].copy()
 
         # Calculate internal fragment ions and sequence lengths
         dataset_with_sequence = self.calculate_internal_fragment_ion(dataset_with_sequence)
@@ -154,7 +155,7 @@ class featureExtractor:
 
         # Iterate over each row of the dataset
         for source_file, scan_number, peptide, charge, mz_value in tqdm(
-                dataset[['Source File', 'Scan number', 'Peptide', 'Charge', 'Mass/Charge (m/z)']].values):
+                dataset[['Source File', 'Scan number', 'Peptide', 'Charge', 'Mass/Charge (m/z)']].to_numpy()):
 
             # Extract base name and scan number for spectrum identification
             file_base_name = source_file.split('.')[0]
@@ -253,7 +254,7 @@ class featureExtractor:
         theoretical_ion_list = self.calculate_residue_ions(b_ion_list, y_ion_list, int(charge), float(precursor_mass))
 
         # Remove peaks from the experimental data that match the calculated theoretical ions
-        filtered_experimental_peaks = self.remove_matching_peaks(experimental_peaks, theoretical_ion_list)
+        filtered_experimental_peaks = self.remove_matching_peaks(np.array(experimental_peaks), theoretical_ion_list)
 
         # Calculate the masses of all possible internal fragments of the peptide
         fragment_ion_mass_list = self.calculate_subpeptide_masses(peptide)
@@ -330,6 +331,7 @@ class featureExtractor:
         return np.sort(b_isotopes), np.sort(y_isotopes)
 
     @staticmethod
+    @jit(nopython=False, cache=True)
     def calculate_residue_ions(b, y, charge, precursor_mass):
         """
         Generate b and y ion series with isotopic charge states.
@@ -363,11 +365,12 @@ class featureExtractor:
         y_ions.append(precursor_mass)
 
         # Combine and get unique results
-        result = np.unique(np.concatenate([np.array(b_ions), np.array(y_ions)]))
+        result = np.unique(np.array(b_ions + y_ions))
 
         return result
 
     @staticmethod
+    @jit(nopython=False, cache=True)
     def remove_matching_peaks(experimental_peaks, theoretical_peaks):
 
         """
@@ -381,14 +384,24 @@ class featureExtractor:
         - filtered experimental peaks (numpy array)
         """
 
-        # Collect indices of experimental peaks that match theoretical peaks
-        arr = [
-            idx for idx, val in enumerate(experimental_peaks)
-            if any(i - fragment_tolerance <= val <= i + fragment_tolerance for i in theoretical_peaks)
-        ]
+        mask = np.ones(len(experimental_peaks), dtype=np.bool_)
 
-        # Remove matching peaks based on the collected indices
-        return np.delete(experimental_peaks, arr)
+        for idx, val in enumerate(experimental_peaks):
+            for i in theoretical_peaks:
+                if i - fragment_tolerance <= val <= i + fragment_tolerance:
+                    mask[idx] = False
+                    break
+
+        return experimental_peaks[mask]
+
+        # # Collect indices of experimental peaks that match theoretical peaks
+        # arr = [
+        #     idx for idx, val in enumerate(experimental_peaks)
+        #     if any(i - fragment_tolerance <= val <= i + fragment_tolerance for i in theoretical_peaks)
+        # ]
+        #
+        # # Remove matching peaks based on the collected indices
+        # return np.delete(experimental_peaks, arr)
 
     @staticmethod
     def calculate_subpeptide_masses(peptide):
@@ -432,6 +445,7 @@ class featureExtractor:
         return np.unique(np.array(ion_masses))
 
     @staticmethod
+    @jit(nopython=False, cache=True)
     def count_final_internal_fragments(filtered_experiment_peaks, theoretical_internal_fragments):
 
         """
@@ -445,11 +459,21 @@ class featureExtractor:
         - count of matching internal fragment peaks (integer)
         """
 
-        # Identify a list of matching peaks within tolerance
-        matching_indices = [
-            idx for idx, peak in enumerate(filtered_experiment_peaks)
-            if any(i - fragment_tolerance <= peak <= i + fragment_tolerance for i in theoretical_internal_fragments)
-        ]
+        mask = np.zeros(len(filtered_experiment_peaks), dtype=np.bool_)
 
-        # Return the number of matches
-        return len(matching_indices)
+        for idx, peak in enumerate(filtered_experiment_peaks):
+            for i in theoretical_internal_fragments:
+                if i - fragment_tolerance <= peak <= i + fragment_tolerance:
+                    mask[idx] = True
+                    break
+
+        return np.count_nonzero(mask)
+
+        # # Identify a list of matching peaks within tolerance
+        # matching_indices = [
+        #     idx for idx, peak in enumerate(filtered_experiment_peaks)
+        #     if any(i - fragment_tolerance <= peak <= i + fragment_tolerance for i in theoretical_internal_fragments)
+        # ]
+        #
+        # # Return the number of matches
+        # return len(matching_indices)

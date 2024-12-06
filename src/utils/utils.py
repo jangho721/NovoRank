@@ -77,7 +77,7 @@ class ClusterRefinement:
         """
 
         return [f"{cluster}_{int(charge)}"
-                for cluster, charge in self.dataset[['Cluster', 'Charge']].values]
+                for cluster, charge in self.dataset[['Cluster', 'Charge']].to_numpy()]
 
     @staticmethod
     def convert_to_integer_id(combined_clusters):
@@ -269,7 +269,7 @@ class NewCandidatePeptideGenerator:
 
         score_dict = {}
 
-        for cluster_id, peptide, score in self.dataset[['New Cluster', 'Peptide', 'Score']].values:
+        for cluster_id, peptide, score in self.dataset[['New Cluster', 'Peptide', 'Score']].to_numpy():
 
             if cluster_id not in score_dict:
                 score_dict[cluster_id] = {}
@@ -338,7 +338,7 @@ class NewCandidatePeptideGenerator:
                                                                                          defaultdict(list), defaultdict(
             list), defaultdict(list)
 
-        for peptide, sequence, cluster_id in self.dataset[['Peptide', 'Sequence', 'New Cluster']].values:
+        for peptide, sequence, cluster_id in self.dataset[['Peptide', 'Sequence', 'New Cluster']].to_numpy():
 
             for ranked_results in top_peptides[cluster_id]:
                 if peptide == ranked_results[0][0]:
@@ -373,7 +373,7 @@ class NewCandidatePeptideGenerator:
             (file_name, scan_number, peptide, sequence, score, rank)
 
             for file_name, scan_number, cluster_id in
-            top_1_dataset[['Source File', 'Scan number', 'New Cluster']].values
+            top_1_dataset[['Source File', 'Scan number', 'New Cluster']].to_numpy()
 
             for peptide, sequence, rank, score in
             zip(peptides_by_cluster[cluster_id], sequences_by_cluster[cluster_id],

@@ -52,11 +52,11 @@ if __name__ == '__main__':
     transformed_dataset = feature_transformer.generate_features()
 
     # Processing spectra to extract internal fragment ion features
-    logging.info("Starting the spectrum denoising process.")
-    denoised_mgf = process.SpectrumNoiseRemoveProcess(config_data)
-    denoised_mgf.prepare_directory()
-    denoised_mgf.execute()
-    logging.info("Spectrum denoising process completed successfully.")
+    # logging.info("Starting the spectrum denoising process.")
+    # denoised_mgf = process.SpectrumNoiseRemoveProcess(config_data)
+    # denoised_mgf.prepare_directory()
+    # denoised_mgf.execute()
+    # logging.info("Spectrum denoising process completed successfully.")
 
     logging.info("Starting internal fragment ion feature extraction.")
     new_dataset = feature_extraction.internal_fragment_ion_features(transformed_dataset)
