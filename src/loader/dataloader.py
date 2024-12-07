@@ -45,18 +45,6 @@ class SequencePreprocessor:
 
         self.pattern = re.compile(r'[^0-9()+-.]')
 
-    def strip_sequence(self, sequence):
-
-        """
-        Normalize sequences by:
-            - Converting isoleucine (I) to leucine (L).
-            - Replacing oxidation-modified methionine (m) with methionine (M).
-        """
-
-        cleaned = ''.join(self.pattern.findall(sequence)).replace('I', 'L')
-        cleaned = cleaned.replace('m', 'M')
-        return cleaned
-
     def process_denovo(self, de_novo) -> pd.DataFrame:
 
         """
@@ -65,7 +53,7 @@ class SequencePreprocessor:
 
         logger.info("Starting de novo sequence processing...")
         de_novo = de_novo[de_novo['Peptide'].notnull()]
-        de_novo['Sequence'] = de_novo['Peptide'].apply(self.strip_sequence)
+        de_novo['Sequence'] = de_novo['Peptide'].apply(self._strip_sequence)
 
         logger.info("De novo sequence processing completed.")
         return de_novo.sort_values(by=['Source File', 'Scan number']).reset_index(drop=True)
@@ -82,6 +70,18 @@ class SequencePreprocessor:
 
         logger.info("Database sequence processing completed.")
         return db.sort_values(by=['Source File', 'Scan number']).reset_index(drop=True)
+
+    def _strip_sequence(self, sequence):
+
+        """
+        Normalize sequences by:
+            - Converting isoleucine (I) to leucine (L).
+            - Replacing oxidation-modified methionine (m) with methionine (M).
+        """
+
+        cleaned = ''.join(self.pattern.findall(sequence)).replace('I', 'L')
+        cleaned = cleaned.replace('m', 'M')
+        return cleaned
 
 
 class ClusterResultProcessor:

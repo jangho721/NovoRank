@@ -70,7 +70,58 @@ class ClusterRefinement:
 
         self.dataset = pd.merge(mgf_info, cluster_info, how='left')
 
-    def combine_cluster_and_charge(self):
+    def get_refined_dataset(self):
+
+        """
+        Return the refined dataset with updated cluster information.
+        """
+
+        return self.dataset
+
+    def execute(self, search_ppm, rt):
+
+        """
+        Execute the cluster refinement process with given search_ppm and RT parameters.
+
+        :param rt:
+        :param search_ppm: m/z tolerance
+        """
+
+        logger.info(f"Executing cluster refinement with search_ppm={search_ppm}, RT={rt}...")
+
+        try:
+            temp = self.dataset['Mass/Charge (m/z)'] * 1e-6 * search_ppm
+            ppm_median = np.median(temp)
+
+            self._refine_clusters_with_charge()  # Refine clusters based on charge
+            self._ml_cluster_refinement('Cluster', ppm_median, rt, 1)  # Apply ML-based refinement
+
+            logger.info("Cluster refinement executed successfully.")
+
+        except Exception as e:
+            logger.error(f"Error during execution: {e}")
+            raise
+
+    def _refine_clusters_with_charge(self):
+
+        """
+        Refine the dataset by redefining cluster indices based on charge.
+        """
+
+        logger.info("Refining clusters with charge...")
+        try:
+            # Combine cluster number with charge
+            combined_clusters = self._combine_cluster_and_charge()
+
+            # Map combined cluster numbers to integers
+            self.dataset['Cluster'] = self._convert_to_integer_id(combined_clusters)
+
+            logger.info("Clusters refined with charge successfully.")
+        except Exception as e:
+            logger.error(f"Error refining clusters with charge: {e}")
+            raise
+
+    def _combine_cluster_and_charge(self):
 
         """
         Combine the cluster number and charge to create unique cluster IDs.
@@ -80,7 +131,7 @@ class ClusterRefinement:
                 for cluster, charge in self.dataset[['Cluster', 'Charge']].to_numpy()]
 
     @staticmethod
-    def convert_to_integer_id(combined_clusters):
+    def _convert_to_integer_id(combined_clusters):
 
         """
         Map the combined cluster IDs to unique integer values.
@@ -92,27 +143,28 @@ class ClusterRefinement:
         # Map each cluster ID to its corresponding integer
         return [unique_clusters[cluster_id] for cluster_id in combined_clusters]
 
-    def refine_clusters_with_charge(self):
+    def _ml_cluster_refinement(self, initial_cluster_column, ppm_eps, rt_ppm, min_samples):
 
         """
-        Refine the dataset by redefining cluster indices based on charge.
+        Perform machine learning-based refinement of clusters.
         """
 
-        logger.info("Refining clusters with charge...")
+        logger.info("Starting ML-based cluster refinement...")
         try:
-            # Combine cluster number with charge
-            combined_clusters = self.combine_cluster_and_charge()
+            top_1 = top1(self.dataset)
+            top_1 = self._refine_clusters_with_ppm(top_1, initial_cluster_column, ppm_eps, min_samples)
+            top_1 = self._refine_clusters_with_rt(top_1, 'New Cluster', rt_ppm, min_samples)
+            top_1 = self._calculate_cluster_sizes(top_1, 'New Cluster')
+            self._merge_cluster_info(top_1)
 
-            # Map combined cluster numbers to integers
-            self.dataset['Cluster'] = self.convert_to_integer_id(combined_clusters)
+            logger.info("ML-based cluster refinement completed successfully.")
 
-            logger.info("Clusters refined with charge successfully.")
         except Exception as e:
-            logger.error(f"Error refining clusters with charge: {e}")
+            logger.error(f"Error during ML-based cluster refinement: {e}")
             raise
 
     @staticmethod
-    def refine_clusters_with_ppm(top_1, col, eps, min_samples):
+    def _refine_clusters_with_ppm(top_1, col, eps, min_samples):
 
         """
         Refine clusters based on Mass/Charge (m/z) and ppm.
@@ -139,7 +191,7 @@ class ClusterRefinement:
             raise
 
     @staticmethod
-    def refine_clusters_with_rt(top_1, col, eps, min_samples):
+    def _refine_clusters_with_rt(top_1, col, eps, min_samples):
 
         """
         Refine clusters based on retention time (RT).
@@ -167,7 +219,7 @@ class ClusterRefinement:
             raise
 
     @staticmethod
-    def calculate_cluster_sizes(top_1, col):
+    def _calculate_cluster_sizes(top_1, col):
 
         """
         Calculate the size of each cluster and add it as a new column.
@@ -183,7 +235,7 @@ class ClusterRefinement:
 
         return top_1
 
-    def merge_cluster_info(self, top_1):
+    def _merge_cluster_info(self, top_1):
 
         """
         Merge the refined cluster information into the dataset.
@@ -192,65 +244,47 @@ class ClusterRefinement:
         self.dataset = pd.merge(self.dataset, top_1[['Source File', 'Scan number', 'New Cluster', 'New Count']],
                                 on=['Source File', 'Scan number'], how='left')
 
-    def ml_cluster_refinement(self, initial_cluster_column, ppm_eps, rt_ppm, min_samples):
-
-        """
-        Perform machine learning-based refinement of clusters.
-        """
-
-        logger.info("Starting ML-based cluster refinement...")
-        try:
-            top_1 = top1(self.dataset)
-            top_1 = self.refine_clusters_with_ppm(top_1, initial_cluster_column, ppm_eps, min_samples)
-            top_1 = self.refine_clusters_with_rt(top_1, 'New Cluster', rt_ppm, min_samples)
-            top_1 = self.calculate_cluster_sizes(top_1, 'New Cluster')
-            self.merge_cluster_info(top_1)
-
-            logger.info("ML-based cluster refinement completed successfully.")
-
-        except Exception as e:
-            logger.error(f"Error during ML-based cluster refinement: {e}")
-            raise
-
-    def execute(self, search_ppm, rt):
-
-        """
-        Execute the cluster refinement process with given search_ppm and RT parameters.
-
-        :param rt:
-        :param search_ppm: m/z tolerance
-        """
-
-        logger.info(f"Executing cluster refinement with search_ppm={search_ppm}, RT={rt}...")
-
-        try:
-            temp = self.dataset['Mass/Charge (m/z)'] * 1e-6 * search_ppm
-            ppm_median = np.median(temp)
-
-            self.refine_clusters_with_charge()  # Refine clusters based on charge
-            self.ml_cluster_refinement('Cluster', ppm_median, rt, 1)  # Apply ML-based refinement
-
-            logger.info("Cluster refinement executed successfully.")
-
-        except Exception as e:
-            logger.error(f"Error during execution: {e}")
-            raise
-
-    def get_refined_dataset(self):
-
-        """
-        Return the refined dataset with updated cluster information.
-        """
-
-        return self.dataset
-
 
 class NewCandidatePeptideGenerator:
     def __init__(self, config, dataset):
         self.config = config
         self.dataset = dataset
 
-    def remove_missing_values(self):
+    def select_top_n_candidates(self, top_n: int):
+
+        """
+        Selects the top n peptides based on scores for each cluster.
+
+        Args:
+            top_n (integer): Number of top peptides to select per cluster.
+
+        Returns:
+            defaultdict: {0: [((ABCD, 6.2345), 0),((ACBD, 5.64321), 1)]}
+                        A dictionary where each cluster ID maps to a list of
+                        tuples containing (peptide, score) and rank.
+        """
+
+        logging.info(f"Selecting top {top_n} candidates for each cluster...")
+
+        self._remove_missing_values()
+        score_dict = self._accumulate_scores()
+
+        # Initializes a defaultdict to avoid manual key initialization
+        top_n_peptides = defaultdict(list)
+
+        for cluster_id in score_dict:
+            # Sort peptides by score in descending order and take the top n
+            sorted_peptides = sorted(score_dict[cluster_id].items(), key=lambda x: x[1], reverse=True)[:top_n]
+
+            # Assign a rank starting from 0
+            for rank, peptide_and_score in enumerate(sorted_peptides):
+                top_n_peptides[cluster_id].append((peptide_and_score, rank))
+
+        logging.info(f"Top {top_n} candidate selection completed successfully.")
+
+        return top_n_peptides
+
+    def _remove_missing_values(self):
 
         """
         Removes rows with missing values in 'Peptide' or 'Score' columns.
@@ -261,7 +295,7 @@ class NewCandidatePeptideGenerator:
 
         return self.dataset.dropna(subset=['Peptide', 'Score'])
 
-    def accumulate_scores(self):
+    def _accumulate_scores(self):
 
         """
         Accumulates scores for each peptide within each cluster.
@@ -288,40 +322,6 @@ class NewCandidatePeptideGenerator:
         #         score_dict[cluster_id][peptide] = sum(score_dict[cluster_id][peptide])
 
         return score_dict
-
-    def select_top_n_candidates(self, top_n: int):
-
-        """
-        Selects the top n peptides based on scores for each cluster.
-
-        Args:
-            top_n (int): Number of top peptides to select per cluster.
-
-        Returns:
-            defaultdict: {0: [((ABCD, 6.2345), 0),((ACBD, 5.64321), 1)]}
-                        A dictionary where each cluster ID maps to a list of
-                        tuples containing (peptide, score) and rank.
-        """
-
-        logging.info(f"Selecting top {top_n} candidates for each cluster...")
-
-        self.remove_missing_values()
-        score_dict = self.accumulate_scores()
-
-        # Initializes a defaultdict to avoid manual key initialization
-        top_n_peptides = defaultdict(list)
-
-        for cluster_id in score_dict:
-            # Sort peptides by score in descending order and take the top n
-            sorted_peptides = sorted(score_dict[cluster_id].items(), key=lambda x: x[1], reverse=True)[:top_n]
-
-            # Assign a rank starting from 0
-            for rank, peptide_and_score in enumerate(sorted_peptides):
-                top_n_peptides[cluster_id].append((peptide_and_score, rank))
-
-        logging.info(f"Top {top_n} candidate selection completed successfully.")
-
-        return top_n_peptides
 
     def organize_new_candidates_info(self, top_peptides):
 
@@ -408,9 +408,9 @@ class MGFNoiseRemover:
         mgf_list = os.listdir(self.mgf_directory)
 
         for file_name in tqdm(mgf_list):
-            self.process_mgf_file(file_name)
+            self._process_mgf_file(file_name)
 
-    def process_mgf_file(self, filename):
+    def _process_mgf_file(self, filename):
 
         """
         Process a single MGF file: read its content, remove noise from spectra,
@@ -428,9 +428,9 @@ class MGFNoiseRemover:
 
         # Process the spectra and write denoised data to output file
         with open(output_path, 'w') as outfile:
-            self.process_spectra(data, outfile)
+            self._process_spectra(data, outfile)
 
-    def process_spectra(self, data, outfile):
+    def _process_spectra(self, data, outfile):
 
         """
         Process the spectra data: remove noise, and write the denoised data to output.
@@ -442,8 +442,8 @@ class MGFNoiseRemover:
         peak_list = []
         window_min, window_max = 0, 100  # Initial window
 
-        process_peaks = self.process_peaks
-        adjust_window = self.adjust_window
+        process_peaks = self._process_peaks
+        adjust_window = self._adjust_window
 
         for line in data:
             # Start of a spectrum
@@ -485,7 +485,7 @@ class MGFNoiseRemover:
                 else:
                     outfile.write(line)
 
-    def process_peaks(self, peak_list, outfile):
+    def _process_peaks(self, peak_list, outfile):
 
         """
         Process the peaks in the current spectrum: remove noise from the peaks within the m/z window range and write the denoised peaks.
@@ -496,14 +496,33 @@ class MGFNoiseRemover:
 
         # Remove noise if there are more than 10 peaks
         if len(peak_list) > 10:
-            peak_list = self.remove_noise_peak_keep_order(peak_list)
+            peak_list = self._remove_noise_peak_keep_order(peak_list)
 
         # Write all peaks to the output file
         for peak in peak_list:
             outfile.write(peak)
 
     @staticmethod
-    def remove_noise_peak_keep_order(peak_list):
+    def _adjust_window(mz, window_min, window_max):
+
+        """
+        Adjust the m/z window range to accommodate a new peak.
+
+        :param mz: Mass-to-charge ratio of the new peak.
+        :param window_min: Current minimum of the window.
+        :param window_max: Current maximum of the window.
+        :return: Updated window_min and window_max.
+        """
+
+        # Increment the window by 100 until the m/z fits in the range
+        while mz > window_max:
+            window_min += 100
+            window_max += 100
+
+        return window_min, window_max
+
+    @staticmethod
+    def _remove_noise_peak_keep_order(peak_list):
 
         """
         Remove the least intense peaks one by one, ensuring only the top 10 peaks remain while maintaining the order of peaks.
@@ -526,22 +545,3 @@ class MGFNoiseRemover:
             intensity_list.pop(min_index)
 
         return peak_list
-
-    @staticmethod
-    def adjust_window(mz, window_min, window_max):
-
-        """
-        Adjust the m/z window range to accommodate a new peak.
-
-        :param mz: Mass-to-charge ratio of the new peak.
-        :param window_min: Current minimum of the window.
-        :param window_max: Current maximum of the window.
-        :return: Updated window_min and window_max.
-        """
-
-        # Increment the window by 100 until the m/z fits in the range
-        while mz > window_max:
-            window_min += 100
-            window_max += 100
-
-        return window_min, window_max

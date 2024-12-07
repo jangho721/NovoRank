@@ -63,8 +63,9 @@ if __name__ == '__main__':
     new_dataset = feature_extraction.internal_fragment_ion_features(transformed_dataset)
     logging.info("Internal fragment ion feature extraction completed successfully.")
 
+    logging.info("Starting retention time feature extraction.")
     new_dataset = feature_extraction.calculate_retention_time_difference_features(new_dataset)
-
+    logging.info("Retention time feature extraction completed successfully.")
     logging.info('Feature extraction process completed successfully.')
 
     # Save the intermediate DataFrame as a CSV file
@@ -75,4 +76,22 @@ if __name__ == '__main__':
     if config_data['params']['top_10']:
         pass
 
-# -> input: 타입 지정, tqdm desc 써주기
+# -> input: 타입 지정
+
+
+    cometX_mgf_path = config['MGF_XCORR']
+    if os.path.exists(cometX_mgf_path):
+        shutil.rmtree(cometX_mgf_path)
+    os.mkdir(cometX_mgf_path)
+
+    if config['TRAIN'] == True: # Train
+        train_df = df_feature[df_feature['GT'].notnull()]
+        CometX_mgf(train_df, config['MGF_PATH'], cometX_mgf_path)
+    else:
+        CometX_mgf(df_feature, config['MGF_PATH'], cometX_mgf_path)
+
+    print()
+    print('>> Done ...\n')
+
+    # Calculatie XCorr
+    print('We need to calculate the XCorr value')

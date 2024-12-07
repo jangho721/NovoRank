@@ -6,9 +6,9 @@ import pandas as pd
 from numba import jit
 from tqdm import tqdm
 from deeplc import DeepLC
-from itertools import accumulate
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+# os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+# os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -33,7 +33,23 @@ class FeatureTransformer:
     def __init__(self, dataset):
         self.dataset = dataset
 
-    def apply_log_scaling(self):
+    def generate_features(self):
+
+        """
+        Generate new features for the dataset by applying log scaling and calculating delta scores.
+        The results are added as new columns to the dataset.
+        """
+
+        # Apply log scaling to the dataset
+        self._apply_log_scaling()
+
+        # Calculate delta scores and add them as a new column 'Delta Score'
+        self.dataset['Delta Score'] = self._calculate_delta_scores()
+
+        # Reset the index
+        return self.dataset.reset_index(drop=True)
+
+    def _apply_log_scaling(self):
 
         """
         Apply logarithmic scaling to the 'Score' and 'New Count' columns to normalize the values.
@@ -51,7 +67,7 @@ class FeatureTransformer:
 
         logging.info('Log scaling process completed successfully.')
 
-    def calculate_delta_scores(self):
+    def _calculate_delta_scores(self):
 
         """
         Calculate the delta scores for each row.
@@ -84,22 +100,6 @@ class FeatureTransformer:
 
         return delta_scores
 
-    def generate_features(self):
-
-        """
-        Generate new features for the dataset by applying log scaling and calculating delta scores.
-        The results are added as new columns to the dataset.
-        """
-
-        # Apply log scaling to the dataset
-        self.apply_log_scaling()
-
-        # Calculate delta scores and add them as a new column 'Delta Score'
-        self.dataset['Delta Score'] = self.calculate_delta_scores()
-
-        # Reset the index
-        return self.dataset.reset_index(drop=True)
-
 
 class featureExtractor:
     def __init__(self, config, elution_time):
@@ -122,8 +122,8 @@ class featureExtractor:
         dataset_with_sequence = dataset[dataset['Sequence'].notnull()].copy()
 
         # Calculate internal fragment ions and sequence lengths
-        dataset_with_sequence = self.calculate_internal_fragment_ion(dataset_with_sequence)
-        dataset_with_sequence = self.calculate_sequence_length(dataset_with_sequence)
+        dataset_with_sequence = self._calculate_internal_fragment_ion(dataset_with_sequence)
+        dataset_with_sequence = self._calculate_sequence_length(dataset_with_sequence)
 
         # Normalize internal fragment ion counts by sequence length
         dataset_with_sequence['Normalized Internal Fragment Ions'] = dataset_with_sequence['Internal Fragment Ions Count'] / dataset_with_sequence['Sequence Length']
@@ -138,7 +138,7 @@ class featureExtractor:
 
         return dataset_combined
 
-    def calculate_internal_fragment_ion(self, dataset):
+    def _calculate_internal_fragment_ion(self, dataset):
 
         """
        Calculate the count of internal fragment ions for each entry in the dataset
@@ -154,12 +154,13 @@ class featureExtractor:
         experimental_peak_list = []
         internal_fragment_ion = []
 
-        process_ion_data = self.process_ion_data
+        process_ion_data = self._process_ion_data
         denoised_mgf_path = self.denoised_mgf_path
 
         # Iterate over each row of the dataset
         for source_file, scan_number, peptide, charge, mz_value in tqdm(
-                dataset[['Source File', 'Scan number', 'Peptide', 'Charge', 'Mass/Charge (m/z)']].to_numpy()):
+                dataset[['Source File', 'Scan number', 'Peptide', 'Charge', 'Mass/Charge (m/z)']].to_numpy(),
+                desc="Finding Internal Fragment Ions"):
 
             # Extract base name and scan number for spectrum identification
             file_base_name = source_file.split('.')[0]
@@ -236,43 +237,43 @@ class featureExtractor:
 
         return dataset
 
-    def process_ion_data(self, experimental_peaks, charge, precursor_mass, peptide):
+    def _process_ion_data(self, experimental_peaks, charge, precursor_mass, peptide):
 
         """
         Processes internal fragment ion data for a given peptide.
 
         Parameters:
             experimental_peaks (list): List of m/z values from the spectrum.
-            charge (int): Charge state.
+            charge (integer): Charge state.
             precursor_mass (float): Precursor mass-to-charge ratio (m/z).
-            peptide (str): Amino acid sequence of the peptide.
+            peptide (string): Amino acid sequence of the peptide.
 
         Returns:
             int: Count of internal fragment ions.
         """
 
         # Calculate the b and y ion series masses for the given peptide sequence
-        b_ion_list, y_ion_list = self.calculate_ion_series_masses(peptide)
+        b_ion_list, y_ion_list = self._calculate_ion_series_masses(peptide)
 
         # Calculate the all possible theoretical ions
-        theoretical_ion_list = self.calculate_residue_ions(b_ion_list, y_ion_list, int(charge), float(precursor_mass))
+        theoretical_ion_list = self._calculate_residue_ions(b_ion_list, y_ion_list, int(charge), float(precursor_mass))
 
         # Remove peaks from the experimental data that match the calculated theoretical ions
-        filtered_experimental_peaks = self.remove_matching_peaks(np.array(experimental_peaks), theoretical_ion_list)
+        filtered_experimental_peaks = self._remove_matching_peaks(np.array(experimental_peaks), theoretical_ion_list)
 
         # Calculate the masses of all possible internal fragments of the peptide
-        fragment_ion_mass_list = self.calculate_subpeptide_masses(peptide)
+        fragment_ion_mass_list = self._calculate_subpeptide_masses(peptide)
 
         # Consider charge effects on internal fragment ions
-        internal_fragment_candidates = self.consider_charge(fragment_ion_mass_list, int(charge))
+        internal_fragment_candidates = self._consider_charge(fragment_ion_mass_list, int(charge))
 
         # Count the final internal fragment ions present in the filtered experimental peaks
-        ion_count = self.count_final_internal_fragments(filtered_experimental_peaks, internal_fragment_candidates)
+        ion_count = self._count_final_internal_fragments(filtered_experimental_peaks, internal_fragment_candidates)
 
         return ion_count
 
     @staticmethod
-    def calculate_sequence_length(dataset):
+    def _calculate_sequence_length(dataset):
 
         """
         Calculate the length of the peptide sequence for each entry in the dataset.
@@ -286,16 +287,16 @@ class featureExtractor:
 
     @staticmethod
     @jit(nopython=False, cache=True)
-    def calculate_isotopes(masses):
+    def _calculate_isotopes(masses):
 
         """
         Calculate isotopic shifts for a list of masses.
 
         Parameters:
-            masses (np.array): Array of base masses.
+            masses (numpy array): Array of base masses.
 
         Returns:
-            np.array: Array containing base masses along with +1 and +2 neutron shifts.
+            numpy array: Array containing base masses along with +1 and +2 neutron shifts.
         """
 
         n = len(masses)
@@ -310,7 +311,7 @@ class featureExtractor:
 
         return isotopes
 
-    def calculate_ion_series_masses(self, sequence):
+    def _calculate_ion_series_masses(self, sequence):
 
         """
         Calculate b and y ion series masses for a peptide sequence.
@@ -328,26 +329,26 @@ class featureExtractor:
         y_masses = np.cumsum(rev_masses)
 
         # Calculate isotopic masses
-        b_isotopes = self.calculate_isotopes(b_masses)
-        y_isotopes = self.calculate_isotopes(y_masses)
+        b_isotopes = self._calculate_isotopes(b_masses)
+        y_isotopes = self._calculate_isotopes(y_masses)
 
         # Sort and return results
         return np.sort(b_isotopes), np.sort(y_isotopes)
 
     @staticmethod
     @jit(nopython=False, cache=True)
-    def calculate_residue_ions(b, y, charge, precursor_mass):
+    def _calculate_residue_ions(b, y, charge, precursor_mass):
         """
         Generate b and y ion series with isotopic charge states.
 
         Parameters:
-        - b: b-series masses (numpy array)
-        - y: y-series masses (numpy array)
-        - charge: maximum charge state to consider
-        - precursor_mass: precursor mass
+        - b (numpy array): b-series masses
+        - y (numpy array): y-series masses
+        - charge (integer): maximum charge state to consider
+        - precursor_mass (float): precursor mass
 
         Returns:
-        - result: unique mass values (numpy array)
+        - numpy array: unique mass values
         """
         # Preallocate lists for b_ions and y_ions
         b_ions = []
@@ -373,31 +374,34 @@ class featureExtractor:
 
     @staticmethod
     @jit(nopython=False, cache=True)
-    def remove_matching_peaks(experimental_peaks, theoretical_peaks):
+    def _remove_matching_peaks(experimental_peaks, theoretical_peaks):
 
         """
         Remove peaks from the experimental data that match theoretical peaks.
 
         Parameters:
-        - experimental_peaks: observed experimental peaks (list)
-        - theoretical_peaks: calculated theoretical peaks (numpy array)
+        - experimental_peaks (numpy array): observed experimental peaks
+        - theoretical_peaks (numpy array): calculated theoretical peaks
 
         Returns:
-        - filtered experimental peaks (numpy array)
+        - numpy array: filtered experimental peaks
         """
 
+        # Initialize a mask array with all values set to True (indicating that all peaks are valid initially)
         mask = np.ones(len(experimental_peaks), dtype=np.bool_)
 
+        # Check if the peak is within the tolerance range of any theoretical peak
         for idx, val in enumerate(experimental_peaks):
             for i in theoretical_peaks:
                 if i - fragment_tolerance <= val <= i + fragment_tolerance:
                     mask[idx] = False
                     break
 
+        # Return the experimental peaks that are still marked as valid (True)
         return experimental_peaks[mask]
 
     @staticmethod
-    def calculate_subpeptide_masses(peptide):
+    def _calculate_subpeptide_masses(peptide):
 
         """
         Calculate masses for all theoretical internal fragment ions
@@ -418,17 +422,17 @@ class featureExtractor:
         return np.array(sorted(subpeptide_masses))
 
     @staticmethod
-    def consider_charge(fragment_ion_mass_list, charge):
+    def _consider_charge(fragment_ion_mass_list, charge):
 
         """
         Calculate ion masses for multiple charge states.
 
         Parameters:
-        - fragment_ion_mass_list: list of base masses (numpy array)
-        - charge: charge state
+        - fragment_ion_mass_list (numpy array): list of base masses
+        - charge (integer): charge state
 
         Returns:
-        - unique ion masses (numpy array)
+        - numpy array: unique ion masses
         """
 
         # compute fragment ions masses for all charge states dynamically
@@ -439,86 +443,103 @@ class featureExtractor:
 
     @staticmethod
     @jit(nopython=False, cache=True)
-    def count_final_internal_fragments(filtered_experiment_peaks, theoretical_internal_fragments):
+    def _count_final_internal_fragments(filtered_experiment_peaks, theoretical_internal_fragments):
 
         """
         Count the number of matching internal fragment peaks.
 
         Parameters:
-        - filtered_experiment_peaks: experimental peaks after filtering (numpy array)
-        - theoretical_internal_fragments: theoretical internal fragment peaks (numpy array)
+        - filtered_experiment_peaks (numpy array): experimental peaks after filtering
+        - theoretical_internal_fragments (numpy array): theoretical internal fragment peaks
 
         Returns:
-        - count of matching internal fragment peaks (integer)
+        - integer: count of matching internal fragment peaks
         """
 
+        # Initialize a mask array to track which peaks match the theoretical fragments
         mask = np.zeros(len(filtered_experiment_peaks), dtype=np.bool_)
 
+        # Check if the peak is within the tolerance range of any theoretical internal fragment
         for idx, peak in enumerate(filtered_experiment_peaks):
             for i in theoretical_internal_fragments:
                 if i - fragment_tolerance <= peak <= i + fragment_tolerance:
                     mask[idx] = True
                     break
 
+        # Count and return the number of matching peaks
         return np.count_nonzero(mask)
 
     def calculate_retention_time_difference_features(self, dataset):
+
         """
-        Main function to process the dataset and calculate retention time differences.
+        Calculates the difference between the predicted and observed retention times.
         """
+
+        # Normalize retention time (in minutes)
         dataset['Retention Time (min)'] = dataset['Retention Time (min)'] / (self.elution_time / 60)
 
-        # Separate rows with and without sequences
+        # Separate the data into two groups:
+        # 1. Data with missing peptide sequences
+        # 2. Data with valid peptide sequences
         missing_sequence_data = dataset[dataset['Sequence'].isnull()].copy()
         valid_sequence_data = dataset[dataset['Sequence'].notnull()].copy()
 
-        # Filter top two peptides and generate prediction/calibration data
+        # Select the top two peptides for each scan(=spectrum)
         valid_sequence_data = self._select_top_two_peptides(valid_sequence_data)
+
+        # Prepare specific data for retention time prediction
         peptide_data, calibration_data = self._prepare_peptide_and_calibration_data(valid_sequence_data)
 
         # Predict retention times
         predicted_rt = self._predict_retention_times(peptide_data, calibration_data)
 
-        # Add predictions and calculate differences
-        valid_sequence_data['predicted_RT (min)'] = predicted_rt
-        valid_sequence_data['Difference_RT (min)'] = np.log(abs(valid_sequence_data['Retention Time (min)'] - valid_sequence_data['predicted_RT (min)']))
+        # Add predicted retention times to the valid sequence data
+        valid_sequence_data['Predicted_RT (min)'] = predicted_rt
 
-        # Add placeholders for missing sequence data
-        missing_sequence_data['predicted_RT (min)'] = np.nan
-        missing_sequence_data['Difference_RT (min)'] = np.nan
+        # Calculate the logarithmic absolute difference between observed and predicted retention times
+        valid_sequence_data['Difference_RT (min)'] = np.log(abs(valid_sequence_data['Retention Time (min)'] - valid_sequence_data['Predicted_RT (min)']))
 
-        # Combine datasets
+        # For data with missing sequences, set predicted retention time and difference as NaN
+        missing_sequence_data[['Predicted_RT (min)', 'Difference_RT (min)']] = np.nan
+
+        # Combine the processed data
         processed_data = pd.concat([valid_sequence_data, missing_sequence_data])
 
-        return processed_data.sort_values(
-            by=['Source File', 'Scan number', 'Rank']
-        ).reset_index(drop=True)
+        # Sort the data and reset the index.
+        return processed_data.sort_values(by=['Source File', 'Scan number', 'Rank']).reset_index(drop=True)
 
-    def _select_top_two_peptides(self, valid_sequence_data):
+    @staticmethod
+    def _select_top_two_peptides(valid_sequence_data):
+
         """
-        Filters the dataset to include the top two ranked peptides for each scan number.
+        Selects the top two peptides for each spectrum.
         """
+
         dataset = valid_sequence_data.sort_values(by=['Source File', 'Scan number', 'Rank'])
 
-        # Filter peptides shorter than 60 characters
+        # Filter out peptides with lengths greater than or equal to 60.
         dataset = dataset[dataset['Peptide'].str.len() < 60].reset_index(drop=True)
 
-        # Get the first and last ranked peptides for each scan
+        # For each spectrum, select the first (highest rank) and last (lowest rank) entries.
         first_rank = dataset.drop_duplicates(subset=['Source File', 'Scan number'], keep='first')
         last_rank = dataset.drop_duplicates(subset=['Source File', 'Scan number'], keep='last')
 
-        # Combine and sort
+        # Combine these entries into a single dataset
         return pd.concat([first_rank, last_rank]).sort_values(
             by=['Source File', 'Scan number', 'Rank']
         ).reset_index(drop=True)
 
-    def _prepare_peptide_and_calibration_data(self, valid_sequence_data):
+    @staticmethod
+    def _prepare_peptide_and_calibration_data(valid_sequence_data):
+
         """
-        Processes the dataset to extract sequence, retention time, and modifications.
+        Prepares data for retention time prediction.
         """
+
+        # Extract relevant columns
         dataset = valid_sequence_data[['Source File', 'Scan number', 'Sequence', 'Peptide', 'Retention Time (min)', 'Score']].copy()
 
-        # Generate modifications column
+        # Convert modifications to strings in a specific format
         modifications = []
         for peptide in dataset['Peptide']:
             mods = [
@@ -532,22 +553,27 @@ class featureExtractor:
         # Rename columns
         dataset.rename(columns={'Retention Time (min)': 'tr', 'Sequence': 'seq'}, inplace=True)
 
-        # Split into calibration and prediction datasets
+        # Split the dataset
         cal_data = dataset[['Source File', 'Scan number', 'seq', 'modifications', 'tr', 'Score']].copy()
         cal_data['modifications'] = ""
 
         pep_data = dataset[['Source File', 'seq', 'modifications', 'tr']].copy()
 
-        cal['modifications'] = cal['modifications'].fillna("")
-        pep['modifications'] = pep['modifications'].fillna("")
+        # Fill missing modification values with an empty string
+        cal_data['modifications'] = cal_data['modifications'].fillna("")
+        pep_data['modifications'] = pep_data['modifications'].fillna("")
 
         return pep_data, cal_data
 
     def _predict_retention_times(self, peptide_data, calibration_data):
+
         """
         Predicts retention times for peptides using DeepLC.
         """
+
         predicted_rt = []
+
+        # Importing DeepLC.
         dlc = DeepLC()
 
         for source_file in tqdm(sorted(peptide_data['Source File'].unique()), desc="Predicting retention times"):
@@ -557,20 +583,27 @@ class featureExtractor:
             # Prepare calibration data
             calibration_subset = self._prepare_calibration_data(calibration_subset)
 
-            # Calibrate and predict
+            # Perform the calibration process
             dlc.calibrate_preds(seq_df=calibration_subset)
+
+            # Use DeepLC to predict retention times for the input peptides
             preds = dlc.make_preds(seq_df=peptide_subset)
-            predicted_rt.extend(preds.tolist())
+            predicted_rt.extend(preds)
 
         return predicted_rt
 
-    def _prepare_calibration_data(self, dataset):
+    @staticmethod
+    def _prepare_calibration_data(dataset):
+
         """
-        Prepares calibration data by deduplicating and selecting the top 1000 scores.
+        Prepares calibration by filtering the data.
         """
+
+        # Remove duplicate entries
         dataset = dataset.drop_duplicates(subset=['Source File', 'Scan number'], keep='first')
         dataset = dataset.drop_duplicates(subset=['seq', 'modifications'], keep='first')
-        dataset = dataset.sort_values(by=['Score'], ascending=False).head(1000)
-        return dataset[['seq', 'modifications', 'tr']]
 
-# 내부에 사용되는 함수는 맨 앞에 _ 붙이기
+        # Select the top 1000 entries based on score
+        dataset = dataset.sort_values(by=['Score'], ascending=False).head(1000)
+
+        return dataset[['seq', 'modifications', 'tr']]

@@ -59,7 +59,7 @@ class TrainProcess:
         - Merge these datasets into a single dataframe for training.
 
     Parameters:
-        - config (dict): Configuration settings (e.g., loaded from config.yaml).
+        - config (dictionary): Configuration settings (e.g., loaded from config.yaml).
     """
 
     def __init__(self, config):
@@ -119,7 +119,7 @@ class TestProcess:
         - Merge these datasets into a single dataframe for testing.
 
     Parameters:
-        - config (dict): Configuration settings (e.g., loaded from config.yaml).
+        - config (dictionary): Configuration settings (e.g., loaded from config.yaml).
     """
 
     def __init__(self, config):
@@ -174,7 +174,7 @@ class GenerateNewCandidateProcess:
         - Creates a dataset with the newly selected top N candidates.
 
     Parameters:
-        - config (dict): Configuration settings (e.g., loaded from config.yaml).
+        - config (dictionary): Configuration settings (e.g., loaded from config.yaml).
         - dataset (pd.DataFrame): The dataset containing peptide and other associated information.
     """
 
@@ -190,7 +190,7 @@ class GenerateNewCandidateProcess:
         Executes the new peptide candidates generation process.
 
         Parameters:
-            - top_n (int): The number of top peptide candidates to select.
+            - top_n (integer): The number of top peptide candidates to select.
         """
 
         # Generate top N candidates
