@@ -21,6 +21,7 @@ if __name__ == '__main__':
 
     search_ppm = args.search_ppm
     cluster_rt = args.cluster_rt
+    elution_time = args.elution_time
 
     # Process based on the TRAIN flag
     if config_data['params']['train']:
@@ -47,7 +48,7 @@ if __name__ == '__main__':
 
     logging.info('Starting feature extraction process.')
     feature_transformer = FeatureTransformer(new_dataset)
-    feature_extraction = featureExtractor(config_data)
+    feature_extraction = featureExtractor(config_data, elution_time)
 
     transformed_dataset = feature_transformer.generate_features()
 
@@ -62,6 +63,8 @@ if __name__ == '__main__':
     new_dataset = feature_extraction.internal_fragment_ion_features(transformed_dataset)
     logging.info("Internal fragment ion feature extraction completed successfully.")
 
+    new_dataset = feature_extraction.calculate_retention_time_difference_features(new_dataset)
+
     logging.info('Feature extraction process completed successfully.')
 
     # Save the intermediate DataFrame as a CSV file
@@ -72,4 +75,4 @@ if __name__ == '__main__':
     if config_data['params']['top_10']:
         pass
 
-# -> input: 타입 지정
+# -> input: 타입 지정, tqdm desc 써주기

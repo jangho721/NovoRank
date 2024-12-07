@@ -5,7 +5,10 @@ import pandas as pd
 
 from numba import jit
 from tqdm import tqdm
+from deeplc import DeepLC
 from itertools import accumulate
+
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -99,15 +102,16 @@ class FeatureTransformer:
 
 
 class featureExtractor:
-    def __init__(self, config):
+    def __init__(self, config, elution_time):
 
         """
         Initialize the feature extractor with configuration settings
         """
 
         self.denoised_mgf_path = config['path']['denoised_mgf_path']
+        self.elution_time = elution_time
 
-    def internal_fragment_ion_features (self, dataset):
+    def internal_fragment_ion_features(self, dataset):
 
         """
         Process the dataset to calculate internal fragment ion features
@@ -365,9 +369,7 @@ class featureExtractor:
         y_ions.append(precursor_mass)
 
         # Combine and get unique results
-        result = np.unique(np.array(b_ions + y_ions))
-
-        return result
+        return np.unique(np.array(b_ions + y_ions))
 
     @staticmethod
     @jit(nopython=False, cache=True)
@@ -393,15 +395,6 @@ class featureExtractor:
                     break
 
         return experimental_peaks[mask]
-
-        # # Collect indices of experimental peaks that match theoretical peaks
-        # arr = [
-        #     idx for idx, val in enumerate(experimental_peaks)
-        #     if any(i - fragment_tolerance <= val <= i + fragment_tolerance for i in theoretical_peaks)
-        # ]
-        #
-        # # Remove matching peaks based on the collected indices
-        # return np.delete(experimental_peaks, arr)
 
     @staticmethod
     def calculate_subpeptide_masses(peptide):
@@ -469,11 +462,115 @@ class featureExtractor:
 
         return np.count_nonzero(mask)
 
-        # # Identify a list of matching peaks within tolerance
-        # matching_indices = [
-        #     idx for idx, peak in enumerate(filtered_experiment_peaks)
-        #     if any(i - fragment_tolerance <= peak <= i + fragment_tolerance for i in theoretical_internal_fragments)
-        # ]
-        #
-        # # Return the number of matches
-        # return len(matching_indices)
+    def calculate_retention_time_difference_features(self, dataset):
+        """
+        Main function to process the dataset and calculate retention time differences.
+        """
+        dataset['Retention Time (min)'] = dataset['Retention Time (min)'] / (self.elution_time / 60)
+
+        # Separate rows with and without sequences
+        missing_sequence_data = dataset[dataset['Sequence'].isnull()].copy()
+        valid_sequence_data = dataset[dataset['Sequence'].notnull()].copy()
+
+        # Filter top two peptides and generate prediction/calibration data
+        valid_sequence_data = self._select_top_two_peptides(valid_sequence_data)
+        peptide_data, calibration_data = self._prepare_peptide_and_calibration_data(valid_sequence_data)
+
+        # Predict retention times
+        predicted_rt = self._predict_retention_times(peptide_data, calibration_data)
+
+        # Add predictions and calculate differences
+        valid_sequence_data['predicted_RT (min)'] = predicted_rt
+        valid_sequence_data['Difference_RT (min)'] = np.log(abs(valid_sequence_data['Retention Time (min)'] - valid_sequence_data['predicted_RT (min)']))
+
+        # Add placeholders for missing sequence data
+        missing_sequence_data['predicted_RT (min)'] = np.nan
+        missing_sequence_data['Difference_RT (min)'] = np.nan
+
+        # Combine datasets
+        processed_data = pd.concat([valid_sequence_data, missing_sequence_data])
+
+        return processed_data.sort_values(
+            by=['Source File', 'Scan number', 'Rank']
+        ).reset_index(drop=True)
+
+    def _select_top_two_peptides(self, valid_sequence_data):
+        """
+        Filters the dataset to include the top two ranked peptides for each scan number.
+        """
+        dataset = valid_sequence_data.sort_values(by=['Source File', 'Scan number', 'Rank'])
+
+        # Filter peptides shorter than 60 characters
+        dataset = dataset[dataset['Peptide'].str.len() < 60].reset_index(drop=True)
+
+        # Get the first and last ranked peptides for each scan
+        first_rank = dataset.drop_duplicates(subset=['Source File', 'Scan number'], keep='first')
+        last_rank = dataset.drop_duplicates(subset=['Source File', 'Scan number'], keep='last')
+
+        # Combine and sort
+        return pd.concat([first_rank, last_rank]).sort_values(
+            by=['Source File', 'Scan number', 'Rank']
+        ).reset_index(drop=True)
+
+    def _prepare_peptide_and_calibration_data(self, valid_sequence_data):
+        """
+        Processes the dataset to extract sequence, retention time, and modifications.
+        """
+        dataset = valid_sequence_data[['Source File', 'Scan number', 'Sequence', 'Peptide', 'Retention Time (min)', 'Score']].copy()
+
+        # Generate modifications column
+        modifications = []
+        for peptide in dataset['Peptide']:
+            mods = [
+                f"{idx + 1}|Carbamidomethyl" if aa == "C" else f"{idx + 1}|Oxidation"
+                for idx, aa in enumerate(peptide)
+                if aa in ['C', 'm']
+            ]
+            modifications.append("|".join(mods))
+        dataset['modifications'] = modifications
+
+        # Rename columns
+        dataset.rename(columns={'Retention Time (min)': 'tr', 'Sequence': 'seq'}, inplace=True)
+
+        # Split into calibration and prediction datasets
+        cal_data = dataset[['Source File', 'Scan number', 'seq', 'modifications', 'tr', 'Score']].copy()
+        cal_data['modifications'] = ""
+
+        pep_data = dataset[['Source File', 'seq', 'modifications', 'tr']].copy()
+
+        cal['modifications'] = cal['modifications'].fillna("")
+        pep['modifications'] = pep['modifications'].fillna("")
+
+        return pep_data, cal_data
+
+    def _predict_retention_times(self, peptide_data, calibration_data):
+        """
+        Predicts retention times for peptides using DeepLC.
+        """
+        predicted_rt = []
+        dlc = DeepLC()
+
+        for source_file in tqdm(sorted(peptide_data['Source File'].unique()), desc="Predicting retention times"):
+            peptide_subset = peptide_data[peptide_data['Source File'] == source_file][['seq', 'modifications', 'tr']]
+            calibration_subset = calibration_data[calibration_data['Source File'] == source_file]
+
+            # Prepare calibration data
+            calibration_subset = self._prepare_calibration_data(calibration_subset)
+
+            # Calibrate and predict
+            dlc.calibrate_preds(seq_df=calibration_subset)
+            preds = dlc.make_preds(seq_df=peptide_subset)
+            predicted_rt.extend(preds.tolist())
+
+        return predicted_rt
+
+    def _prepare_calibration_data(self, dataset):
+        """
+        Prepares calibration data by deduplicating and selecting the top 1000 scores.
+        """
+        dataset = dataset.drop_duplicates(subset=['Source File', 'Scan number'], keep='first')
+        dataset = dataset.drop_duplicates(subset=['seq', 'modifications'], keep='first')
+        dataset = dataset.sort_values(by=['Score'], ascending=False).head(1000)
+        return dataset[['seq', 'modifications', 'tr']]
+
+# 내부에 사용되는 함수는 맨 앞에 _ 붙이기

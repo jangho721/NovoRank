@@ -10,7 +10,15 @@ def parse_arguments():
         '-search_ppm',
         type=float,
         required=True,
-        help='Precursor tolerance (ppm) used in the de novo search. This parameter is required and will be used as a parameter for DBSCAN clustering.'
+        help='Precursor tolerance (ppm) used in the de novo search.'
+    )
+
+    parser.add_argument(
+        '--elution_time',
+        '-elution_time',
+        type=float,
+        required=True,
+        help='Specify the Elution Time (in minutes) used in the sample extraction experiment.'
     )
 
     parser.add_argument(
@@ -26,7 +34,7 @@ def parse_arguments():
         '-cluster_rt',
         type=float,
         default=2,
-        help='Retention time (in minutes) for refining the clustering process. Used as a parameter for DBSCAN clustering. Default is 2 minutes.'
+        help='Retention time (in minutes) param for refining the clustering process. Default is 2 minutes.'
     )
 
     return parser.parse_args()
