@@ -64,6 +64,7 @@ class TrainProcess:
 
     def __init__(self, config):
         self.data_loader = DataLoader(config)
+        self.config = config
 
     def execute_data_processing(self, cluster_info, mgf_info, ppm, rt) -> pd.DataFrame:
 
@@ -87,7 +88,8 @@ class TrainProcess:
 
         return merged_df
 
-    def execute_candidate_generation(self, dataset, dataset_top1):
+    @staticmethod
+    def execute_candidate_generation(dataset, dataset_top1):
 
         """
         This function merges the input dataset with `dataset_top1`, performs filtering and sorting to generate the final new dataset.
@@ -102,11 +104,30 @@ class TrainProcess:
         # Apply the labeling function to add a label column based on peptide and GT match
         dataset = labeling(dataset)
 
-        # Remove rows where neither 'Peptide' nor 'GT' is present
-        dataset = dataset[dataset['Peptide'].notnull() | dataset['GT'].notnull()]
+        # Remove rows where 'Peptide' is missing
+        dataset = dataset[dataset['Peptide'].notnull()]
 
         # Sort the dataset by 'Source File', 'Scan number', and 'Rank', and reset the index
         return dataset.sort_values(by=['Source File', 'Scan number', 'Rank']).reset_index(drop=True)
+
+    def execute_xcorr_mgf_generation(self, dataset):
+
+        """
+        Execute the process of generating MGF files for XCorr calculation, filtering the dataset beforehand.
+        """
+
+        # Initialize the process with configuration settings
+        process = XcorrMGFGenerateProcess(self.config)
+        # Set up a clean output directory
+        process.prepare_directory()
+
+        # Filter rows with non-null 'GT' values
+        filtered_dataset = dataset[dataset['GT'].notnull()].reset_index(drop=True)
+
+        # Generate an MGF files containing the peptide sequence information
+        process.execute(filtered_dataset)
+
+        return filtered_dataset
 
 
 class TestProcess:
@@ -144,7 +165,8 @@ class TestProcess:
 
         return merged_df
 
-    def execute_candidate_generation(self, dataset, dataset_top1):
+    @staticmethod
+    def execute_candidate_generation(dataset, dataset_top1):
 
         """
         This function merges the input dataset with `dataset_top1`, performs filtering and sorting to generate the final new dataset.
@@ -161,6 +183,22 @@ class TestProcess:
 
         # Sort the dataset by 'Source File', 'Scan number', and 'Rank', and reset the index
         return dataset.sort_values(by=['Source File', 'Scan number', 'Rank']).reset_index(drop=True)
+
+    def execute_xcorr_mgf_generation(self, dataset):
+
+        """
+        Execute the entire process of generating MGF files for XCorr calculation.
+        """
+
+        # Initialize the process with configuration settings
+        process = XcorrMGFGenerateProcess(self.config)
+        # Set up a clean output directory
+        process.prepare_directory()
+
+        # Generate an MGF files containing the peptide sequence information
+        process.execute(dataset)
+
+        return dataset
 
 
 class GenerateNewCandidateProcess:
@@ -181,6 +219,7 @@ class GenerateNewCandidateProcess:
     def __init__(self, config, dataset):
         self.config = config
         self.dataset = dataset
+
         # Initialize PeptideCandidateGenerator
         self.peptide_generator = NewCandidatePeptideGenerator(config, dataset)
 
@@ -215,9 +254,9 @@ class SpectrumNoiseRemoveProcess:
         Initialize the SpectrumNoiseRemoverProcess with configuration settings.
         """
 
-        self.mgf_directory = config['path']['mgf_path']  # Path to the directory containing original MGF files.
-        self.save_directory = config['path']['denoised_mgf_path']  # Path to the directory for saving denoised MGF files.
-        self.instance = MGFNoiseRemover(self.mgf_directory, self.save_directory)  # Create an MGFNoiseRemover instance.
+        self.mgf_directory = config['path']['mgf_path']  # Path to the directory containing original MGF files
+        self.save_directory = config['path']['denoised_mgf_path']  # Path to the directory for saving denoised MGF files
+        self.instance = MGFNoiseRemover(self.mgf_directory, self.save_directory)  # Create an MGFNoiseRemover instance
 
     def prepare_directory(self):
 
@@ -227,9 +266,9 @@ class SpectrumNoiseRemoveProcess:
         If the directory already exists, it is removed and recreated to ensure a clean state.
         """
 
-        if os.path.exists(self.save_directory):  # Check if the output directory exists.
-            shutil.rmtree(self.save_directory)  # Remove the directory if it exists.
-        os.mkdir(self.save_directory)  # Create a fresh output directory.
+        if os.path.exists(self.save_directory):  # Check if the output directory exists
+            shutil.rmtree(self.save_directory)  # Remove the directory if it exists
+        os.mkdir(self.save_directory)  # Create a fresh output directory
 
     def execute(self):
 
@@ -239,5 +278,39 @@ class SpectrumNoiseRemoveProcess:
         Saves the denoised spectra to the specified output directory.
         """
 
-        # denoised MGF files: Each file contains spectra where only the top 10 peaks are retained within every 100 Da window.
+        # denoised MGF files: Each file contains spectra where only the top 10 peaks are retained within every 100 Da window
         self.instance.generate_noise_removed_mgf()
+
+
+class XcorrMGFGenerateProcess:
+    def __init__(self, config):
+
+        """
+        Initialize the XcorrMGFGenerator with configuration settings.
+        """
+
+        self.mgf_directory = config['path']['mgf_path']  # Path to the directory containing original MGF files
+        self.save_directory = config['path']['xcorr_mgf_path']  # Path to the directory for saving MGF files for Xcorr calculation
+        self.instance = XcorrMGFGenerator(self.mgf_directory, self.save_directory)  # Create an XcorrMGFGenerator instance
+
+    def prepare_directory(self):
+
+        """
+        Prepare the output directory for saving processed MGF files.
+
+        If the directory already exists, it is removed and recreated to ensure a clean state.
+        """
+
+        if os.path.exists(self.save_directory):  # Check if the output directory exists
+            shutil.rmtree(self.save_directory)  # Remove the directory if it exists
+        os.mkdir(self.save_directory)  # Create a fresh output directory
+
+    def execute(self, dataset):
+
+        """
+        Execute the MGF file generation process for XCorr calculation.
+
+        Generates new MGF files containing the peptide sequence information, saving the output in the specified directory.
+        """
+
+        self.instance.generate_cometx_mgf(dataset)

@@ -203,7 +203,7 @@ class DataLoader:
     Handles the loading and parsing of data for the training or testing process.
 
     Parameters:
-        - config (dict): Configuration parameters
+        - config (dict): Configuration parameters.
     """
 
     def __init__(self, config):

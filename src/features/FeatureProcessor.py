@@ -56,7 +56,7 @@ class FeatureTransformer:
         The transformed 'Score' is then divided by the transformed 'New Count' for scaling.
         """
 
-        logging.info('Starting log scaling process.')
+        logging.info('Starting log scaling process...')
 
         # Apply log transformation to 'Score' and 'New Count'
         self.dataset['Score'] = np.log(self.dataset['Score'] + 1)
@@ -76,7 +76,7 @@ class FeatureTransformer:
             list: A list of delta scores corresponding to each row in the dataset.
         """
 
-        logging.info('Starting delta score calculation process.')
+        logging.info('Starting delta score calculation process...')
 
         delta_scores = []  # List to store the calculated delta scores
         previous_key = None  # To store the previous key
@@ -105,7 +105,7 @@ class featureExtractor:
     def __init__(self, config, elution_time):
 
         """
-        Initialize the feature extractor with configuration settings
+        Initialize the feature extractor with configuration settings.
         """
 
         self.denoised_mgf_path = config['path']['denoised_mgf_path']
@@ -114,11 +114,10 @@ class featureExtractor:
     def internal_fragment_ion_features(self, dataset):
 
         """
-        Process the dataset to calculate internal fragment ion features
+        Process the dataset to calculate internal fragment ion features.
         """
 
         # Separate data into those with missing sequences and those with sequences
-        dataset_missing_sequence = dataset[dataset['Sequence'].isnull()].copy()
         dataset_with_sequence = dataset[dataset['Sequence'].notnull()].copy()
 
         # Calculate internal fragment ions and sequence lengths
@@ -129,14 +128,8 @@ class featureExtractor:
         dataset_with_sequence['Normalized Internal Fragment Ions'] = dataset_with_sequence['Internal Fragment Ions Count'] / dataset_with_sequence['Sequence Length']
         dataset_with_sequence['Normalized Internal Fragment Ions'] = np.log(dataset_with_sequence['Normalized Internal Fragment Ions'] + 1)
 
-        # Handle missing sequence data by setting related columns to NaN
-        dataset_missing_sequence[['Internal Fragment Ions Count', 'Sequence Length', 'Normalized Internal Fragment Ions']] = np.nan
-
-        # Merge the datasets and sort by specified columns
-        dataset_combined = pd.concat([dataset_with_sequence, dataset_missing_sequence])
-        dataset_combined = dataset_combined.sort_values(by=['Source File', 'Scan number', 'Rank']).reset_index(drop=True)
-
-        return dataset_combined
+        # Sort the processed data by specific columns and reset the index
+        return dataset_with_sequence.sort_values(by=['Source File', 'Scan number', 'Rank']).reset_index(drop=True)
 
     def _calculate_internal_fragment_ion(self, dataset):
 
@@ -144,6 +137,8 @@ class featureExtractor:
        Calculate the count of internal fragment ions for each entry in the dataset
        using the provided denoised .mgf files.
        """
+
+        process_ion_data = self._process_ion_data
 
         # Sort the list of .mgf files in the denoised path
         file_list = sorted(os.listdir(self.denoised_mgf_path))
@@ -153,9 +148,6 @@ class featureExtractor:
         current_file_data, current_spec_key = None, None
         experimental_peak_list = []
         internal_fragment_ion = []
-
-        process_ion_data = self._process_ion_data
-        denoised_mgf_path = self.denoised_mgf_path
 
         # Iterate over each row of the dataset
         for source_file, scan_number, peptide, charge, mz_value in tqdm(
@@ -170,7 +162,7 @@ class featureExtractor:
             # Load data if not already loaded, then initialize variables for the current file
             if current_file_data is None:
                 current_file_name = file_list[current_file_index]
-                current_file_data = open(f"{denoised_mgf_path}/{current_file_name}").readlines()
+                current_file_data = open(f"{self.denoised_mgf_path}/{current_file_name}").readlines()
                 line_index = 0
 
             # If processing the same spectrum, calculate and append the ion count
@@ -188,7 +180,7 @@ class featureExtractor:
                         logging.info("Reached the end of the files. No more data.")
                         break
                     current_file_name = file_list[current_file_index]
-                    current_file_data = open(f"{denoised_mgf_path}/{current_file_name}").readlines()
+                    current_file_data = open(f"{self.denoised_mgf_path}/{current_file_name}").readlines()
                     line_index = 0
 
                 # Process the current line in the .mgf file
@@ -208,7 +200,7 @@ class featureExtractor:
                             logging.info("Reached the end of the files. No more data.")
                             break
                         current_file_name = file_list[current_file_index]
-                        current_file_data = open(f"{denoised_mgf_path}/{current_file_name}").readlines()
+                        current_file_data = open(f"{self.denoised_mgf_path}/{current_file_name}").readlines()
                         line_index = 0
                         continue
 
@@ -342,13 +334,13 @@ class featureExtractor:
         Generate b and y ion series with isotopic charge states.
 
         Parameters:
-        - b (numpy array): b-series masses
-        - y (numpy array): y-series masses
-        - charge (integer): maximum charge state to consider
-        - precursor_mass (float): precursor mass
+        - b (numpy array): b-series masses.
+        - y (numpy array): y-series masses.
+        - charge (integer): maximum charge state to consider.
+        - precursor_mass (float): precursor mass.
 
         Returns:
-        - numpy array: unique mass values
+        - numpy array: unique mass values.
         """
         # Preallocate lists for b_ions and y_ions
         b_ions = []
@@ -380,11 +372,11 @@ class featureExtractor:
         Remove peaks from the experimental data that match theoretical peaks.
 
         Parameters:
-        - experimental_peaks (numpy array): observed experimental peaks
-        - theoretical_peaks (numpy array): calculated theoretical peaks
+        - experimental_peaks (numpy array): observed experimental peaks.
+        - theoretical_peaks (numpy array): calculated theoretical peaks.
 
         Returns:
-        - numpy array: filtered experimental peaks
+        - numpy array: filtered experimental peaks.
         """
 
         # Initialize a mask array with all values set to True (indicating that all peaks are valid initially)
@@ -404,7 +396,7 @@ class featureExtractor:
     def _calculate_subpeptide_masses(peptide):
 
         """
-        Calculate masses for all theoretical internal fragment ions
+        Calculate masses for all theoretical internal fragment ions.
         """
 
         # Remove the first and last character of the peptide
@@ -428,11 +420,11 @@ class featureExtractor:
         Calculate ion masses for multiple charge states.
 
         Parameters:
-        - fragment_ion_mass_list (numpy array): list of base masses
-        - charge (integer): charge state
+        - fragment_ion_mass_list (numpy array): list of base masses.
+        - charge (integer): charge state.
 
         Returns:
-        - numpy array: unique ion masses
+        - numpy array: unique ion masses.
         """
 
         # compute fragment ions masses for all charge states dynamically
@@ -449,11 +441,11 @@ class featureExtractor:
         Count the number of matching internal fragment peaks.
 
         Parameters:
-        - filtered_experiment_peaks (numpy array): experimental peaks after filtering
-        - theoretical_internal_fragments (numpy array): theoretical internal fragment peaks
+        - filtered_experiment_peaks (numpy array): experimental peaks after filtering.
+        - theoretical_internal_fragments (numpy array): theoretical internal fragment peaks.
 
         Returns:
-        - integer: count of matching internal fragment peaks
+        - integer: count of matching internal fragment peaks.
         """
 
         # Initialize a mask array to track which peaks match the theoretical fragments
@@ -478,10 +470,7 @@ class featureExtractor:
         # Normalize retention time (in minutes)
         dataset['Retention Time (min)'] = dataset['Retention Time (min)'] / (self.elution_time / 60)
 
-        # Separate the data into two groups:
-        # 1. Data with missing peptide sequences
-        # 2. Data with valid peptide sequences
-        missing_sequence_data = dataset[dataset['Sequence'].isnull()].copy()
+        # Data with valid peptide sequences
         valid_sequence_data = dataset[dataset['Sequence'].notnull()].copy()
 
         # Select the top two peptides for each scan(=spectrum)
@@ -499,14 +488,8 @@ class featureExtractor:
         # Calculate the logarithmic absolute difference between observed and predicted retention times
         valid_sequence_data['Difference_RT (min)'] = np.log(abs(valid_sequence_data['Retention Time (min)'] - valid_sequence_data['Predicted_RT (min)']))
 
-        # For data with missing sequences, set predicted retention time and difference as NaN
-        missing_sequence_data[['Predicted_RT (min)', 'Difference_RT (min)']] = np.nan
-
-        # Combine the processed data
-        processed_data = pd.concat([valid_sequence_data, missing_sequence_data])
-
-        # Sort the data and reset the index.
-        return processed_data.sort_values(by=['Source File', 'Scan number', 'Rank']).reset_index(drop=True)
+        # Sort the processed data by specific columns and reset the index
+        return valid_sequence_data.sort_values(by=['Source File', 'Scan number', 'Rank']).reset_index(drop=True)
 
     @staticmethod
     def _select_top_two_peptides(valid_sequence_data):
@@ -517,10 +500,10 @@ class featureExtractor:
 
         dataset = valid_sequence_data.sort_values(by=['Source File', 'Scan number', 'Rank'])
 
-        # Filter out peptides with lengths greater than or equal to 60.
+        # Filter out peptides with lengths greater than or equal to 60
         dataset = dataset[dataset['Peptide'].str.len() < 60].reset_index(drop=True)
 
-        # For each spectrum, select the first (highest rank) and last (lowest rank) entries.
+        # For each spectrum, select the first (highest rank) and last (lowest rank) entries
         first_rank = dataset.drop_duplicates(subset=['Source File', 'Scan number'], keep='first')
         last_rank = dataset.drop_duplicates(subset=['Source File', 'Scan number'], keep='last')
 
@@ -573,7 +556,7 @@ class featureExtractor:
 
         predicted_rt = []
 
-        # Importing DeepLC.
+        # Importing DeepLC
         dlc = DeepLC()
 
         for source_file in tqdm(sorted(peptide_data['Source File'].unique()), desc="Predicting retention times"):

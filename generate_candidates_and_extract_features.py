@@ -25,10 +25,12 @@ if __name__ == '__main__':
 
     # Process based on the TRAIN flag
     if config_data['params']['train']:
+        # Initiating the training process
         logging.info("Starting training process...")
         instance = process.TrainProcess(config_data)
         dataset = instance.execute_data_processing(cluster_df, mgf_information_df, search_ppm, cluster_rt)
     else:
+        # Initiating the testing process
         logging.info("Starting testing process...")
         instance = process.TestProcess(config_data)
         dataset = instance.execute_data_processing(cluster_df, mgf_information_df, search_ppm, cluster_rt)
@@ -46,27 +48,39 @@ if __name__ == '__main__':
 
     logging.info("Candidate generation process completed successfully.")
 
-    logging.info('Starting feature extraction process.')
+    logging.info('Starting feature extraction process...')
     feature_transformer = FeatureTransformer(new_dataset)
     feature_extraction = featureExtractor(config_data, elution_time)
 
     transformed_dataset = feature_transformer.generate_features()
 
     # Processing spectra to extract internal fragment ion features
-    # logging.info("Starting the spectrum denoising process.")
-    # denoised_mgf = process.SpectrumNoiseRemoveProcess(config_data)
-    # denoised_mgf.prepare_directory()
-    # denoised_mgf.execute()
-    # logging.info("Spectrum denoising process completed successfully.")
+    logging.info("Starting the spectrum denoising process...")
+    denoised_mgf = process.SpectrumNoiseRemoveProcess(config_data)
+    denoised_mgf.prepare_directory()
+    denoised_mgf.execute()
+    logging.info("Spectrum denoising process completed successfully.")
 
-    logging.info("Starting internal fragment ion feature extraction.")
+    logging.info("Starting internal fragment ion feature extraction...")
     new_dataset = feature_extraction.internal_fragment_ion_features(transformed_dataset)
     logging.info("Internal fragment ion feature extraction completed successfully.")
 
-    logging.info("Starting retention time feature extraction.")
+    logging.info("Starting retention time feature extraction...")
     new_dataset = feature_extraction.calculate_retention_time_difference_features(new_dataset)
     logging.info("Retention time feature extraction completed successfully.")
     logging.info('Feature extraction process completed successfully.')
+
+    # Processing spectra to generate MGF files for XCorr calculation
+    logging.info("Starting MGF file generation for XCorr calculation...")
+    new_dataset = instance.execute_xcorr_mgf_generation(new_dataset)
+    logging.info("MGF file generation for XCorr calculation completed successfully.")
+
+    if config_data['params']['train']:
+        # Training process code here
+        logging.info("Training process completed successfully.")
+    else:
+        # Testing process code here
+        logging.info("Testing process completed successfully.")
 
     # Save the intermediate DataFrame as a CSV file
     logging.info("Starting to save the new dataset as CSV...")
@@ -76,22 +90,6 @@ if __name__ == '__main__':
     if config_data['params']['top_10']:
         pass
 
+    logging.info("Proceeding to the next step:\n\n1. Calculate the XCorr using CometX software\n2. Execute run_novorank.py")
+
 # -> input: 타입 지정
-
-
-    cometX_mgf_path = config['MGF_XCORR']
-    if os.path.exists(cometX_mgf_path):
-        shutil.rmtree(cometX_mgf_path)
-    os.mkdir(cometX_mgf_path)
-
-    if config['TRAIN'] == True: # Train
-        train_df = df_feature[df_feature['GT'].notnull()]
-        CometX_mgf(train_df, config['MGF_PATH'], cometX_mgf_path)
-    else:
-        CometX_mgf(df_feature, config['MGF_PATH'], cometX_mgf_path)
-
-    print()
-    print('>> Done ...\n')
-
-    # Calculatie XCorr
-    print('We need to calculate the XCorr value')

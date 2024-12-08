@@ -12,6 +12,7 @@ path:
       filename: PXD014222_db.csv
   save_path: ./data/interim
   denoised_mgf_path: ./data/processed/denoised_mgf
+  xcorr_mgf_path: ./data/processed/xcorr_mgf
 params:
   train: True
   top_10: False

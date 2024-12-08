@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import pandas as pd
 
-from tqdm import tqdm
+from tqdm import tqd
 from sklearn.cluster import DBSCAN
 from collections import defaultdict
 
@@ -51,8 +51,8 @@ def labeling(dataset) -> pd.DataFrame:
         pd.DataFrame: The original DataFrame with an added 'Label' column.
 
     Labeling logic:
-        - 0 if 'Sequence' and 'GT' are the same (match)
-        - 1 if 'Sequence' and 'GT' are different (mismatch)
+        - 0 if 'Sequence' and 'GT' are the same (match).
+        - 1 if 'Sequence' and 'GT' are different (mismatch).
     """
 
     dataset['Label'] = (dataset['Sequence'] != dataset['GT']).astype(int)
@@ -84,7 +84,7 @@ class ClusterRefinement:
         Execute the cluster refinement process with given search_ppm and RT parameters.
 
         :param rt:
-        :param search_ppm: m/z tolerance
+        :param search_ppm: m/z tolerance.
         """
 
         logger.info(f"Executing cluster refinement with search_ppm={search_ppm}, RT={rt}...")
@@ -170,10 +170,10 @@ class ClusterRefinement:
         Refine clusters based on Mass/Charge (m/z) and ppm.
 
         :param top_1:
-        :param col: Column name to be used for refinement
-        :param eps: DBSCAN parameter for the maximum distance between samples
-        :param min_samples: DBSCAN parameter for the minimum number of samples in a cluster
-        :return: DataFrame with new refined cluster labels
+        :param col: Column name to be used for refinement.
+        :param eps: DBSCAN parameter for the maximum distance between samples.
+        :param min_samples: DBSCAN parameter for the minimum number of samples in a cluster.
+        :return: DataFrame with new refined cluster labels.
         """
 
         logger.info(f"Refining clusters with ppm. eps={eps}...")
@@ -197,10 +197,10 @@ class ClusterRefinement:
         Refine clusters based on retention time (RT).
 
         :param top_1:
-        :param col: Column name to be used for refinement
-        :param eps: DBSCAN parameter for the maximum distance between samples
-        :param min_samples: DBSCAN parameter for the minimum number of samples in a cluster
-        :return: DataFrame with new refined cluster labels
+        :param col: Column name to be used for refinement.
+        :param eps: DBSCAN parameter for the maximum distance between samples.
+        :param min_samples: DBSCAN parameter for the minimum number of samples in a cluster.
+        :return: DataFrame with new refined cluster labels.
         """
 
         logger.info(f"Refining clusters with RT. eps={eps}...")
@@ -545,3 +545,86 @@ class MGFNoiseRemover:
             intensity_list.pop(min_index)
 
         return peak_list
+
+
+class XcorrMGFGenerator:
+    def __init__(self, mgf_directory, save_directory):
+
+        """
+        Initialize the XcorrMGFGenerator.
+
+        :param mgf_directory: Directory containing the original MGF files.
+        :param save_directory: Directory to save the generated MGF files, modified for XCorr calculations.
+        """
+
+        self.mgf_directory = mgf_directory
+        self.save_directory = save_directory
+
+    def generate_cometx_mgf(self, dataset):
+
+        """
+        Generate new MGF files for XCorr calculation by adding peptide sequence information.
+        """
+
+        mgf_files = sorted(os.listdir(self.mgf_directory))  # List of MGF files sorted alphabetically
+        current_file_index, current_index = 0, 0  # Track current MGF file and line index
+        current_mgf_content, output_file = None, None  # Store MGF file content and output file reference
+        mgf_scan_number = -1  # Current scan number being processed
+        current_spectrum = []  # Store lines of the current spectrum
+
+        for idx, (source_file, scan_number, peptide) in enumerate(
+                tqdm(dataset[['Source File', 'Scan number', 'Peptide']].to_numpy(),
+                     desc="Generating MGF Files for XCorr Calculation")):
+
+            # Load the first MGF file at the start of processing
+            if idx == 0:
+                current_file_name = mgf_files[current_file_index]
+                current_mgf_content = open(f"{self.mgf_directory}/{current_file_name}").readlines()
+                output_file = open(os.path.join(self.save_directory, f"{current_file_name[:-4]}_xcorr.mgf"), 'w')
+                current_index = 0
+
+            if scan_number == mgf_scan_number:
+                for data in current_spectrum:
+                    if data.startswith('TITLE='):
+                        formatted_peptide = peptide.replace('m', 'M+15.9949').replace('C', 'C+57.021464')
+                        output_file.write(f'SEQ={formatted_peptide}\n')
+                    output_file.write(data)
+            else:
+                # Process a new spectrum
+                current_spectrum = []
+                while True:
+                    if current_index >= len(current_mgf_content):
+                        current_file_index += 1
+                        output_file.close()
+                        if current_file_index >= len(mgf_files):  # If no more files, stop processing
+                            logging.info("Reached the end of the files. No more data.")
+                            break
+                        # Load the next file
+                        current_file_name = mgf_files[current_file_index]
+                        current_mgf_content = open(f"{self.mgf_directory}/{current_file_name}").readlines()
+                        output_file = open(os.path.join(self.save_directory, f"{current_file_name[:-4]}_xcorr.mgf"), 'w')
+                        current_index = 0
+
+                    current_line = current_mgf_content[current_index]
+
+                    if current_line.startswith('TITLE='):
+                        current_spectrum.append(current_line)
+                        mgf_scan_number = int(current_line.split('.')[1])
+                    elif current_line.startswith('END IONS'):
+                        current_spectrum.append(current_line)
+                        if mgf_scan_number == scan_number:
+                            for data in current_spectrum:
+                                if data.startswith('TITLE='):
+                                    formatted_peptide = peptide.replace('m', 'M+15.9949').replace('C', 'C+57.021464')
+                                    output_file.write(f'SEQ={formatted_peptide}\n')
+                                output_file.write(data)
+                            current_index += 1
+                            break
+                        else:
+                            current_spectrum = []
+                    else:
+                        current_spectrum.append(current_line)
+                    current_index += 1
+
+        # Close the last output file
+        output_file.close()
