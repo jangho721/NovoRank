@@ -28,7 +28,7 @@ NovoRank
   │    │  
   │    └─── utils
   │          ├── config.py: Command-line argument parsing and configuration file loading
-  │          ├── process.py: Functions for performing data processing tasks
+  │          ├── process.py: Functions for performing data processing
   │          └── utils.py: Utility functions providing support
   │
   ├─── pretrained: Pretrained NovoRank models (Casanovo, PEAKS, pNovo3) in .h5 format
