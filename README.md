@@ -20,30 +20,22 @@ NovoRank
   │ 
   ├── src
   │    │     
-  │    ├── features: BERT finetuned on downstream tasks
-  │    │     └── FeatureProcessor.py: code for reward
+  │    ├── features
+  │    │     └── FeatureProcessor.py
   │    │       
   │    ├── loader
-  │    │     └── dataloader.py: code for reward
+  │    │     └── dataloader.py
   │    │  
-  │    ├── script: script for training and evaluating a pruned BERT on downstream tasks
-  │    │ 
-  │    ├─── utils
-  │    │     ├── config.py: default cfgs
-  │    │     ├── process.py: utility functions
-  │    │     └── utils.py: utility functions
-  │    │
-  │    ├─── transformers: refer to https://github.com/huggingface/transformers/
-  │    │     
-  │    ├─── main.py: main file to run Automated-BERT-Regularization
-  │    │    
-  │    └─── train.py: code for training the agent
+  │    └─── utils
+  │          ├── config.py: Command-line argument parsing and configuration file loading
+  │          ├── process.py: Classes/functions for performing data processing tasks
+  │          └── utils.py: Utility classes/functions providing support
   │
-  ├─── models: GLUE data
+  ├─── pretrained: Pretrained NovoRank models (Casanovo, PEAKS, pNovo3) in .h5 format
   │
-  ├─── pretrained: GLUE data
-  │
-  └─── software: shell scripts for demo
+  └─── software
+        ├── CometX: XCorr calculation software (in-house software)
+        └── MSCluster: Spectral clustering software
 ```
 
 ## Requirements
