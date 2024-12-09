@@ -46,27 +46,27 @@ All datasets used in this work are available for download from [**Zenodo**](http
   The [**config.yaml**](https://github.com/jangho721/NovoRank/blob/main/config.yaml) is used to set up the parameters and initial configurations required to run NovoRank. It contains default values, and descriptions for each option are provided as comments within it.
 
 ## Requirements
-
-NovoRank is implemented and tested with the following dependencies:
-### Software and Libraries:
-- Python == 3.9
-- [**DeepLC**](https://github.com/compomics/DeepLC)
-- [**MS-Cluster**](http://proteomics.ucsd.edu/software-tools/ms-clusterarchives)
-- [**CometX**](https://github.com/jangho721/NovoRank/tree/main/software/CometX) (In-house software modified to calculate XCorr, based on Comet software)
-<br>
-
-### To install the required Python packages:
+⦁ To install the required Python packages:
 1. Clone the repository or download the code.
 2. Install the dependencies listed in `requirements.txt`:
 ```c
 pip install -r requirements.txt
 ```
+> **Note:**  
+> NovoRank was implemented using **Python 3.9** and utilizes the [**DeepLC**](https://github.com/compomics/DeepLC) package, which is included in the `requirements.txt`.
+<br>
 
-## Usage
+⦁ Software
+- [**MS-Cluster**](http://proteomics.ucsd.edu/software-tools/ms-clusterarchives)
+- [**CometX**](https://github.com/jangho721/NovoRank/tree/main/software/CometX) (In-house software modified to calculate XCorr, based on Comet software)
+
+## How to use
 <pre>
-⦁ Command: java -jar CyGate.jar --c configFile
-- Example: java -jar CyGate.jar --c foo.txt
+- Command: python generate_candidates_and_extract_features.py --search_ppm (precursor tolerance) --elution_time (elution time)
+- Example: python generate_candidates_and_extract_features.py --search_ppm 20 --elution_time 120
 </pre>
+> `--search_ppm` : in ppm  
+> `--elution_time` : in minutes
 
 ## Results
 <pre>
