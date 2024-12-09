@@ -1,5 +1,6 @@
 import shutil
 import logging
+import pandas as pd
 
 from src.utils.utils import *
 from src.loader.dataloader import *

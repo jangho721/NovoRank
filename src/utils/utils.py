@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import pandas as pd
 
-from tqdm import tqd
+from tqdm import tqdm
 from sklearn.cluster import DBSCAN
 from collections import defaultdict
 
@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def top1(dataset) -> pd.DataFrame:
+
     """
     This ensures only the top-ranked result among the top N candidates is retained.
 
@@ -27,6 +28,7 @@ def top1(dataset) -> pd.DataFrame:
 
 
 def drop_missing_cluster_info(dataset) -> pd.DataFrame:
+
     """
     Removes rows from the dataset where clustering information is missing.
 
@@ -41,6 +43,7 @@ def drop_missing_cluster_info(dataset) -> pd.DataFrame:
 
 
 def labeling(dataset) -> pd.DataFrame:
+
     """
     Adds a 'Label' column to the dataset by comparing the 'Sequence' and 'GT' (Ground Truth) columns.
 

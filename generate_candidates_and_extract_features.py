@@ -84,12 +84,15 @@ if __name__ == '__main__':
 
     # Save the intermediate DataFrame as a CSV file
     logging.info("Starting to save the new dataset as CSV...")
-    new_dataset.to_csv(os.path.join(config_data['path']['save_path'], "dataset_top2.csv"), index=False)
-    logging.info("New dataset successfully saved as dataset_top2.csv.")
+    new_dataset.to_csv(os.path.join(config_data['path']['save_path'],
+                                    config_data['path']['interim_report']), index=False)
+    logging.info(f"New dataset successfully saved as {config_data['path']['interim_report']}.")
 
     if config_data['params']['top_10']:
         pass
 
-    logging.info("Proceeding to the next step:\n\n1. Calculate the XCorr using CometX software\n2. Execute run_novorank.py")
+    logging.info("Proceeding to the next step:"
+                 "\n\n1. Calculate the XCorr using CometX software"
+                 "\n2. Execute run_novorank.py")
 
 # -> input: 타입 지정
