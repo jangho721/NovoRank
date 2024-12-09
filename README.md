@@ -21,15 +21,15 @@ NovoRank
   ├── src
   │    │     
   │    ├── features
-  │    │     └── FeatureProcessor.py
+  │    │     └── FeatureProcessor.py: Functions for feature calculation
   │    │       
   │    ├── loader
-  │    │     └── dataloader.py
+  │    │     └── dataloader.py: Functions for data loading
   │    │  
   │    └─── utils
   │          ├── config.py: Command-line argument parsing and configuration file loading
-  │          ├── process.py: Classes/functions for performing data processing tasks
-  │          └── utils.py: Utility classes/functions providing support
+  │          ├── process.py: Functions for performing data processing tasks
+  │          └── utils.py: Utility functions providing support
   │
   ├─── pretrained: Pretrained NovoRank models (Casanovo, PEAKS, pNovo3) in .h5 format
   │
