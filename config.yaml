@@ -1,19 +1,20 @@
 # config.yaml
 
 path:
-  # Path to the cluster data
+  # Path of the clustering result from MS-Cluster
   cluster_path: ./data/external/mscluster
 
-  # Path to the raw MGF files
+  # Path of a folder containing MS/MS spectra (MGF format)
   mgf_path: ./data/raw
 
   search_results:
-    # Path and filename for de_novo search results
+    # Path and filename for de_novo search results (CSV)
     de_novo:
       path: ./data/external/denovo
       filename: PXD014222_Casanovo.csv
 
-    # Path and filename for database search results
+    # Path and filename for database search results (CSV)
+    # Used only in the training process.
     db:
       path: ./data/external/db
       filename: PXD014222_db.csv
@@ -21,13 +22,13 @@ path:
   # Path to save project outputs
   save_path: ./data/interim
 
-  # Path to the denoised MGF files
+  # Path of a folder containing MS/MS denoised spectra (MGF format)
   denoised_mgf_path: ./data/processed/denoised_mgf
 
-  # Path to the MGF files for cross-correlation calculations
+  # Path of a folder containing MS/MS spectra for XCorr calculation (MGF format)
   xcorr_mgf_path: ./data/processed/xcorr_mgf
 
-  # Filename for the interim report
+  # Filename for the interim report (Feature file)
   interim_report: dataset_top2.csv
 params:
   # Whether to train the model (True: training process, False: evaluation process)

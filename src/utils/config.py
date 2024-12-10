@@ -4,7 +4,7 @@ import argparse
 
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description="generate candidates and extract features")
+    parser = argparse.ArgumentParser(description="Generate candidates and extract features")
     parser.add_argument(
         '--search_ppm',
         '-search_ppm',
@@ -18,7 +18,7 @@ def parse_arguments():
         '-elution_time',
         type=float,
         required=True,
-        help='Specify the Elution Time (in minutes) used in the sample extraction experiment.'
+        help='A total elution time (minutes) in the mass spectrometry assay.'
     )
 
     parser.add_argument(
@@ -26,7 +26,7 @@ def parse_arguments():
         '-config',
         type=str,
         default='./config.yaml',
-        help='path to the config YAML file (default: ./config.yaml)'
+        help='Path to the config YAML file. (default: ./config.yaml)'
     )
 
     parser.add_argument(
