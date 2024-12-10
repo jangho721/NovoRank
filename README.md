@@ -75,7 +75,7 @@ MSCluster.exe --list list.txt --output-name CLUSTERS --mixture-prob 0.01 --fragm
 > For detailed instructions on using MS-cluster, refer to the [manual](https://github.com/jangho721/NovoRank/blob/main/software/MSCluster/manual.pdf).
 <br>
 
-- Step 2. Generate top2 candidates and extract features
+- Step 2. Generate two candidates and extract features
 ```c
 python generate_candidates_and_extract_features.py --search_ppm 20 --elution_time 120
 ```
