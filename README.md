@@ -48,7 +48,12 @@ All datasets used in this work are available for download from [**Zenodo**](http
 ## Requirements
 ⦁ To install the required Python packages:
 1. Clone the repository or download the code.
-2. Install the dependencies listed in `requirements.txt`:
+2. Create and activate an Anaconda virtual environment:
+```c
+conda create -n [NAME] python==3.9
+conda activate [NAME]
+```
+3. Install the dependencies listed in `requirements.txt`:
 ```c
 pip install -r requirements.txt
 ```
@@ -61,12 +66,22 @@ pip install -r requirements.txt
 - [**CometX**](https://github.com/jangho721/NovoRank/tree/main/software/CometX) (In-house software modified to calculate XCorr, based on Comet software)
 
 ## How to use
-<pre>
-- Command: python generate_candidates_and_extract_features.py --search_ppm (precursor tolerance) --elution_time (elution time)
-- Example: python generate_candidates_and_extract_features.py --search_ppm 20 --elution_time 120
-</pre>
-> `--search_ppm` : in ppm  
-> `--elution_time` : in minutes
+- Step 1. Spectral clustering using MS-Cluster
+```c
+MSCluster.exe --list list.txt --output-name CLUSTERS --mixture-prob 0.01 --fragment-tolerance 0.02 --assign-charges
+```
+> **Note:**  
+> `list.txt` contains a list of the full paths to the input files.  
+> For detailed instructions on using MS-cluster, refer to the [manual](https://github.com/jangho721/NovoRank/blob/main/software/MSCluster/manual.pdf).
+<br>
+
+- Step 2. Generate top2 candidates and extract features
+```c
+python generate_candidates_and_extract_features.py --search_ppm 20 --elution_time 120
+```
+> **Note:**  
+> `python generate_candidates_and_extract_features.py -h` can be used to check the available options and their descriptions.
+<br>
 
 ## Results
 <pre>
