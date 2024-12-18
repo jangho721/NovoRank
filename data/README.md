@@ -17,15 +17,17 @@ data
   │
   └─── raw: Original spectra data (.mgf format)
 ```
-<br>
 
 ## Essential Data for Using NovoRank
-- Training & Inference:  
-Both `de novo search` and `MS-clust` results are required.
+- Training & Inference (Common Requirements):
+  
+1. Both `de novo search` and `MS-clust` results are required.  
+2. `Spectra data` in .mgf format with 'SCANS=' information included is required.  
+   (See [sample](https://github.com/jangho721/NovoRank/blob/main/data/raw/qExHF01_06119_sample.mgf))  
+<br>
 
 - For Training:  
-In addition to the de novo search and MS-clust results, the `database search` result with reliable PSMs is also required for positive and negative labeling.
-<br>
+In addition to the common requirements, the `database search` result with reliable PSMs is also required for positive and negative labeling.
 
 ## Dataset Preparation
 To use NovoRank, a user MUST ensure that their datasets conform to the NovoRank input standard.  
