@@ -16,20 +16,20 @@ For detailed insights behind NovoRank, refer to the [**NovoRank paper**]().
 ``` Unicode
 NovoRank
   │ 
-  ├── generate_candidates_and_extract_features.py
+  ├─── generate_candidates_and_extract_features.py
   │ 
-  ├── src
-  │    │     
-  │    ├── features
-  │    │     └── FeatureProcessor.py: Functions for feature calculation
-  │    │       
-  │    ├── loader
-  │    │     └── dataloader.py: Functions for data loading
-  │    │  
-  │    └─── utils
-  │          ├── config.py: Command-line argument parsing and configuration file loading
-  │          ├── process.py: Functions for performing data processing
-  │          └── utils.py: Utility functions providing support
+  ├─── src
+  │     │     
+  │     ├── features
+  │     │     └── FeatureProcessor.py: Functions for feature calculation
+  │     │       
+  │     ├── loader
+  │     │     └── dataloader.py: Functions for data loading
+  │     │  
+  │     └─── utils
+  │           ├── config.py: Command-line argument parsing and configuration file loading
+  │           ├── process.py: Functions for performing data processing
+  │           └── utils.py: Utility functions providing support
   │
   ├─── pretrained: Pretrained NovoRank models (Casanovo, PEAKS, pNovo3) in .h5 format
   │
