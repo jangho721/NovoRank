@@ -7,7 +7,7 @@ data
   │     ├── db: Results from database searches (.csv format)
   │     ├── denovo: Results from de novo sequencing (.csv format)
   │     ├── mscluster: Clustering results generated using MS-Cluster (.clust format)
-  │     └── cometx: ...
+  │     └── xcorr: ...
   │
   ├─── interim: Folder for intermediate and final results (.csv format), including feature information
   │
