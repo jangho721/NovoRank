@@ -1,5 +1,5 @@
 ## Overview
-#### Datasets
+#### Datasets (Location)
 ``` Unicode
 data
   │ 
@@ -17,6 +17,15 @@ data
   │
   └─── raw: Original spectra data (.mgf format)
 ```
+<br>
+
+## Essential Data for Using NovoRank
+- Training & Inference:  
+Both `de novo search` and `MS-clust` results are required.
+
+- For Training:  
+In addition to the de novo search and MS-clust results, the `database search` result with reliable PSMs is also required for positive and negative labeling.
+<br>
 
 ## Dataset Preparation
 To use NovoRank, a user MUST ensure that their datasets conform to the NovoRank input standard.  
