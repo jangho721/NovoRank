@@ -82,7 +82,7 @@ MSCluster.exe --list list.txt --output-name CLUSTERS --mixture-prob 0.01 --fragm
 python generate_candidates_and_extract_features.py --search_ppm 20 --elution_time 120
 ```
 > **Note:**  
-> `python generate_candidates_and_extract_features.py -h` can be used to check the available options and their descriptions.
+> To check the available options and their descriptions, run the command `python generate_candidates_and_extract_features.py -h`.
 <br>
 
 ## Results
