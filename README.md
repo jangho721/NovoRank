@@ -39,7 +39,8 @@ NovoRank
 ```
 
 ## Datasets
-All datasets used in this work are available for download from [**Zenodo**](https://zenodo.org/records/14046459).
+All datasets used in this work are available for download from [**Zenodo**](https://zenodo.org/records/14046459).  
+To use NovoRank, a user must refer to [**Dataset Preparation**](https://github.com/jangho721/NovoRank/blob/main/data/README.md).
 
 ## Configuration
   
