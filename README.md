@@ -67,7 +67,7 @@ pip install -r requirements.txt
 - [**CometX**](https://github.com/jangho721/NovoRank/tree/main/software/CometX) (In-house software modified to calculate XCorr, based on Comet software)
 
 ## How to Use
-For the description of the datasets required to execute Steps 2 and 4, refer to [Essential Data for Using NovoRank](https://github.com/jangho721/NovoRank/blob/main/data/README.md).  
+For the description of the datasets required to execute Steps 2 and 4, refer to [Essential Data for Using NovoRank](https://github.com/jangho721/NovoRank/blob/main/data/README.md#essential-data-for-using-novorank).  
 
 - Step 1. Spectral clustering using MS-Cluster
 ```c
