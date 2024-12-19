@@ -40,7 +40,7 @@ NovoRank
 
 ## Datasets
 All datasets used in this work are available for download from [**Zenodo**](https://zenodo.org/records/14046459).  
-To use NovoRank, a user must refer to [Dataset Preparation](https://github.com/jangho721/NovoRank/blob/main/data/README.md).
+To use NovoRank, a user must refer to the `README.md` in the [./data](https://github.com/jangho721/NovoRank/tree/main/data) directory.
 
 ## Configuration
   
@@ -66,8 +66,8 @@ pip install -r requirements.txt
 - [**MS-Cluster**](http://proteomics.ucsd.edu/software-tools/ms-clusterarchives)
 - [**CometX**](https://github.com/jangho721/NovoRank/tree/main/software/CometX) (In-house software modified to calculate XCorr, based on Comet software)
 
-## How to use
-For the description of the datasets required at each step, please refer to the `README.md` file in the [./data](https://github.com/jangho721/NovoRank/tree/main/data) directory.
+## How to Use
+For the description of the datasets required to execute Steps 2 and 4, refer to [Essential Data for Using NovoRank](https://github.com/jangho721/NovoRank/blob/main/data/README.md).  
 
 - Step 1. Spectral clustering using MS-Cluster
 ```c
