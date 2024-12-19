@@ -40,11 +40,11 @@ NovoRank
 
 ## Datasets
 All datasets used in this work are available for download from [**Zenodo**](https://zenodo.org/records/14046459).  
-To use NovoRank, a user must refer to [**Dataset Preparation**](https://github.com/jangho721/NovoRank/blob/main/data/README.md).
+To use NovoRank, a user must refer to [Dataset Preparation](https://github.com/jangho721/NovoRank/blob/main/data/README.md).
 
 ## Configuration
   
-  The [**config.yaml**](https://github.com/jangho721/NovoRank/blob/main/config.yaml) is used to set up the parameters and initial configurations required to run NovoRank. It contains default values, and descriptions for each option are provided as comments within it.
+  The [config.yaml](https://github.com/jangho721/NovoRank/blob/main/config.yaml) is used to set up the parameters and initial configurations required to run NovoRank. It contains default values, and descriptions for each option are provided as comments within it.
 
 ## Requirements
 ⦁ To install the required Python packages:
