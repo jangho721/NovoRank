@@ -55,7 +55,7 @@ NovoRank assumes the following modifications:
 > If the sequence is AM+15.99EENGR, a user MUST convert it to AmEENGR.  
 
 ## Essential Data for Using NovoRank
-Place the data required for each step in the appropriate locations, referring to the **'Overview'** described above.
+Place the data required for each step in the appropriate locations, referring to the [**'Overview'**](https://github.com/jangho721/NovoRank/tree/main/data#overview) described above.
 
 ### < Step 2 >
 - Training & Inference (Common Requirements):
