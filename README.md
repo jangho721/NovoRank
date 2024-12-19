@@ -86,6 +86,15 @@ python generate_candidates_and_extract_features.py --search_ppm 20 --elution_tim
 > To check the available options and their descriptions, run the command `python generate_candidates_and_extract_features.py -h`.
 <br>
 
+- Step 3. Xcorr calculation using CometX  
+```c
+CometX.exe -X -Pcomet.params [Path]\*.mgf
+```
+> **Note:**  
+> [Path] is the directory containing MGF files for xcorr calculation.  
+> `*_xcorr.tsv` files will be generated.
+<br>
+
 ## Results
 <pre>
 - For the files specified in Data.Sample, *_cygated.csv files are generated.
