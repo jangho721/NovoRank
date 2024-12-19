@@ -40,7 +40,8 @@ NovoRank
 
 ## Datasets
 All datasets used in this work are available for download from [**Zenodo**](https://zenodo.org/records/14046459).  
-To use NovoRank, a user must refer to the `README.md` in the [./data](https://github.com/jangho721/NovoRank/tree/main/data) directory.
+
+To use NovoRank, a user MUST refer to the `README.md` in the [./data](https://github.com/jangho721/NovoRank/tree/main/data) directory, where sample data has also been provided.
 
 ## Configuration
   
