@@ -52,7 +52,7 @@ NovoRank assumes the following modifications:
 2. Variable modification: Oxidation on Methionine (M), represented as a lowercase "m".
 
 > **For example**:  
-> If the sequence is AM+15.99EENGR, a user must convert it to AmEENGR.  
+> If the sequence is AM+15.99EENGR, a user MUST convert it to AmEENGR.  
 
 ## Essential Data for Using NovoRank
 Place the data required for each step in the appropriate locations, referring to the **'Overview'** described above.
