@@ -7,7 +7,7 @@ data
   │     ├── db: Results from database searches (.csv format)
   │     ├── denovo: Results from de novo sequencing (.csv format)
   │     ├── mscluster: Clustering results generated using MS-Cluster (.clust format)
-  │     └── xcorr: ...
+  │     └── xcorr: Cross-correlation calculation results using CometX (.tsv format)
   │
   ├─── interim: Folder for intermediate and final results (.csv format), including feature information
   │
@@ -18,7 +18,46 @@ data
   └─── raw: Original spectra data (.mgf format)
 ```
 
+## Dataset Preparation
+To use NovoRank, a user MUST ensure that their datasets conform to the NovoRank input standard.  
+
+#### ⦁ De novo search result  
+
+Once you perform de novo search, you MUST convert the result to below form:  
+
+Source File|Scan number|Peptide|Score
+---|---|---|---|
+Hela_1.mgf|10|HKPSVK|85|
+
+> **Note:**  
+> Each column is separated by comma (comma-separated value format (CSV)).  
+<br>
+
+#### ⦁ Database search result  
+
+Once you perform database search using the same MS/MS spectra used in the de novo search, you MUST convert the result to the below form:  
+
+Source File|Scan number|GT
+---|---|---|
+Hela_1.mgf|3|KPVGAAK| 
+
+> **Note:**  
+> Each column is separated by comma (comma-separated value format (CSV)).  
+<br>
+
+#### ⦁ Post-translational modification notation  
+
+NovoRank assumes the following modifications:  
+1. Fixed modification: All Cysteines (C) have Carbamidomethylation.
+2. Variable modification: Oxidation on Methionine (M), represented as a lowercase "m".
+
+> **For example**:  
+> If the sequence is AM+15.99EENGR, a user must convert it to AmEENGR.  
+
 ## Essential Data for Using NovoRank
+Place the data required for each step in the appropriate locations, referring to the **'Overview'** described above.
+
+### < Step 2 >
 - Training & Inference (Common Requirements):
   
 1. Both `de novo search` and `MS-clust` results are required.  
@@ -27,38 +66,9 @@ data
 <br>
 
 - For Training:  
-In addition to the common requirements, the `database search` result with reliable PSMs is also required for positive and negative labeling.
+In addition to the common requirements, the `database search` result with reliable PSMs is also required for positive and negative labeling.  
 
-## Dataset Preparation
-To use NovoRank, a user MUST ensure that their datasets conform to the NovoRank input standard.  
-<br>
-
-#### ⦁ De novo search result  
-Once you perform de novo search, you MUST convert the result to below form:
-
-Source File|Scan number|Peptide|Score
----|---|---|---|
-Hela_1.mgf|10|HKPSVK|85|
-
-> **Note:**  
-> Each column is separated by comma (comma-separated value format (CSV)).
-<br>
-
-#### ⦁ Database search result 
-Once you perform database search using the same MS/MS spectra used in the de novo search, you MUST convert the result to the below form:
-
-Source File|Scan number|GT
----|---|---|
-Hela_1.mgf|3|KPVGAAK| 
-
-> **Note:**  
-> Each column is separated by comma (comma-separated value format (CSV)).
-<br>
-
-#### ⦁ Post-translational modification notation
-NovoRank assumes the following modifications:
-- **Fixed modification**: All Cysteines (C) have Carbamidomethylation.
-- **Variable modification**: Oxidation on Methionine (M), represented as a lowercase "m".
-
-> **For example**:  
-> If the sequence is AM+15.99EENGR, a user must convert it to AmEENGR.
+### < Step 4 >
+- Training & Inference (Common Requirements):
+  
+1. `Cross-correlation calculation` results are required.
