@@ -75,7 +75,6 @@ For the description of the datasets required to execute Steps 2 and 4, refer to 
 MSCluster.exe --list list.txt --output-name CLUSTERS --mixture-prob 0.01 --fragment-tolerance 0.02 --assign-charges
 ```
 > **Note:**  
-> `list.txt` contains a list of the full paths to the input files.  
 > For detailed instructions on using MS-cluster, refer to the [manual](https://github.com/jangho721/NovoRank/blob/main/software/MSCluster/manual.pdf).
 <br>
 
