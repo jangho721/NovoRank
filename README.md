@@ -81,7 +81,7 @@ MSCluster.exe --list list.txt --output-name CLUSTERS --mixture-prob 0.01 --fragm
 
 - Step 2. Generate two candidates and extract features
 ```c
-python generate_candidates_and_extract_features.py --search_ppm 20 --elution_time 120
+python generate_candidates_and_extract_features.py --search_ppm [PRECURSOR_TOLERANCE] --elution_time [ELUTION_TIME_MIN]
 ```
 > **Note:**  
 > To check the available options and their descriptions, run the command `python generate_candidates_and_extract_features.py -h`.
