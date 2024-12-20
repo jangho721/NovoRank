@@ -72,7 +72,7 @@ For the description of the datasets required to execute Steps 2 and 4, refer to 
 
 - Step 1. Spectral clustering using MS-Cluster
 ```c
-MSCluster.exe --list list.txt --output-name CLUSTERS --mixture-prob 0.01 --fragment-tolerance 0.02 --assign-charges
+MSCluster.exe --list [PATH] --output-name CLUSTERS --mixture-prob 0.01 --fragment-tolerance 0.02 --assign-charges
 ```
 > **Note:**  
 > For detailed instructions on using MS-cluster, refer to the [manual](https://github.com/jangho721/NovoRank/blob/main/software/MSCluster/manual.pdf).
@@ -88,10 +88,10 @@ python generate_candidates_and_extract_features.py --search_ppm [PRECURSOR_TOLER
 
 - Step 3. Xcorr calculation using CometX  
 ```c
-CometX.exe -X -Pcomet.params [Path]\*.mgf
+CometX.exe -X -Pcomet.params [PATH]\*.mgf
 ```
 > **Note:**  
-> [Path] is the directory containing MGF files for xcorr calculation.  
+> [PATH] is the directory containing MGF files for xcorr calculation.  
 > `*_xcorr.tsv` files will be generated.
 <br>
 
