@@ -64,7 +64,7 @@ pip install -r requirements.txt
 <br>
 
 ⦁ Software
-- [**MS-Cluster**](http://proteomics.ucsd.edu/software-tools/ms-clusterarchives)
+- [**MS-Cluster**](http://proteomics.ucsd.edu/software-tools/ms-clusterarchives) ([Download](https://github.com/jangho721/NovoRank/tree/main/software/MSCluster))
 - [**CometX**](https://github.com/jangho721/NovoRank/tree/main/software/CometX) (In-house software modified to calculate XCorr, based on Comet software)
 
 ## How to Use
