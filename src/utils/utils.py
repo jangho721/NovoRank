@@ -550,7 +550,7 @@ class MGFNoiseRemover:
         return peak_list
 
 
-class XcorrMGFGenerator:
+class XCorrMGFGenerator:
     def __init__(self, mgf_directory, save_directory):
 
         """
@@ -577,7 +577,7 @@ class XcorrMGFGenerator:
 
         for idx, (source_file, scan_number, peptide) in enumerate(
                 tqdm(dataset[['Source File', 'Scan number', 'Peptide']].to_numpy(),
-                     desc="Generating MGF Files for XCorr Calculation")):
+                     desc="Generating MGF files for XCorr calculation")):
 
             # Load the first MGF file at the start of processing
             if idx == 0:

@@ -12,9 +12,9 @@ logger = logging.getLogger(__name__)
 
 
 class FileHandler:
-    def __init__(self, file_name: str):
+    def __init__(self, file_path: str):
         self.data = None
-        self.file_name = file_name
+        self.file_path = file_path
 
     def load_csv(self) -> pd.DataFrame:
 
@@ -22,11 +22,11 @@ class FileHandler:
         Load data from a CSV file in chunks.
         """
 
-        if not self.file_name.endswith('.csv'):
+        if not self.file_path.endswith('.csv'):
             raise ValueError("Input file must be a .csv file.")
 
-        logger.info(f"Loading CSV file: {self.file_name}")
-        chunk_data = pd.read_csv(self.file_name, chunksize=100000)
+        logger.info(f"Loading CSV file: {self.file_path}")
+        chunk_data = pd.read_csv(self.file_path, chunksize=100000)
         self.data = pd.concat(chunk_data)
 
         if 'Scan number' in self.data.columns:
@@ -84,7 +84,7 @@ class SequencePreprocessor:
         return cleaned
 
 
-class ClusterResultProcessor:
+class ClusteringResultProcessor:
     def __init__(self, cluster_dir, mgf_dir):
         self.cluster_dir = cluster_dir
         self.cluster_list = os.listdir(cluster_dir)
@@ -134,10 +134,10 @@ class ClusterResultProcessor:
 
 
 class MGFProcessor:
-    def __init__(self, mgf_ath):
-        self.path = mgf_ath
-        if not os.path.exists(mgf_ath):
-            raise FileNotFoundError(f"The specified path does not exist: {mgf_ath}")
+    def __init__(self, mgf_path):
+        self.path = mgf_path
+        if not os.path.exists(mgf_path):
+            raise FileNotFoundError(f"The specified path does not exist: {mgf_path}")
 
     def extract_spectrum_info(self) -> pd.DataFrame:
 
@@ -153,7 +153,7 @@ class MGFProcessor:
         dataset = []
         logging.info("Starting spectrum information extraction...")
 
-        for file_name in tqdm(mgf_files, desc="Processing MGF Files"):
+        for file_name in tqdm(mgf_files, desc="Processing MGF files"):
             with open(os.path.join(self.path, file_name), 'r') as file:
                 scan, charge, mass, rt = None, None, None, None
 
@@ -187,6 +187,7 @@ class MGFProcessor:
 
         columns = ['Source File', 'Scan number', 'Charge', 'Mass/Charge (m/z)', 'Retention Time (s)']
         mgf_info = pd.DataFrame(dataset, columns=columns)
+
         if not mgf_info.empty:
             mgf_info['Retention Time (min)'] = mgf_info['Retention Time (s)'] / 60
             mgf_info = mgf_info.drop(columns=['Retention Time (s)'])
@@ -255,3 +256,56 @@ class DataLoader:
         db = preprocess.process_database(db)
 
         return db
+
+
+class CrossCorrelationResultProcessor:
+    def __init__(self, xcorr_dir):
+
+        """
+        :param xcorr_dir: Path to the directory containing .tsv files with XCorr calculation results.
+        """
+
+        self.path_dir = xcorr_dir
+
+    @staticmethod
+    def _parse_line(line):
+
+        """
+        Parse a single line from the .tsv file.
+        """
+
+        line = line.strip()
+        fn = line.split('.')[0] + '.mgf'
+        scan = line.split('.')[1]
+        charge = line.split('\t')[1].split(' ')[0]
+        peptide = line.split('\t')[4].replace('M+15.9949', 'm').replace('C+57.021464', 'C')
+        xcorr = line.split('\t')[5]
+
+        return fn, scan, int(charge), peptide, float(xcorr)
+
+    def extract_cross_correlation_info(self):
+
+        """
+        Process all the XCorr calculation result files in .tsv format and compile the data into a DataFrame.
+        """
+
+        file_ext = '.tsv'
+        file_list = [file for file in os.listdir(self.path_dir) if file.endswith(file_ext)]
+
+        data = []
+        for file_name in tqdm(file_list, desc="Processing XCorr calculation result files"):
+            file_path = os.path.join(self.path_dir, file_name)
+
+            with open(file_path, 'r') as file:
+                lines = file.readlines()
+
+                for idx, line in enumerate(lines):
+                    if idx == 0:  # Skip header
+                        continue
+                    parsed_data = self._parse_line(line)
+                    data.append(parsed_data)
+
+        columns = ['Source File', 'Scan number', 'Charge', 'Peptide', 'XCorr']
+        df = pd.DataFrame(data, columns=columns).astype({'Scan number': 'int'})
+
+        return df

@@ -118,7 +118,7 @@ class TrainProcess:
         """
 
         # Initialize the process with configuration settings
-        process = XcorrMGFGenerateProcess(self.config)
+        process = XCorrMGFGenerateProcess(self.config)
         # Set up a clean output directory
         process.prepare_directory()
 
@@ -131,14 +131,14 @@ class TrainProcess:
         return filtered_dataset
 
 
-class TestProcess:
+class InferenceProcess:
 
     """
-    Handles the end-to-end data preparation for the 'NovoRank' test process.
+    Handles the end-to-end data preparation for the 'NovoRank' inference process.
 
     Responsibilities:
         - Load and parse data from input datasets.
-        - Merge these datasets into a single dataframe for testing.
+        - Merge these datasets into a single dataframe for inference.
 
     Parameters:
         - config (dictionary): Configuration settings (e.g., loaded from config.yaml).
@@ -192,7 +192,7 @@ class TestProcess:
         """
 
         # Initialize the process with configuration settings
-        process = XcorrMGFGenerateProcess(self.config)
+        process = XCorrMGFGenerateProcess(self.config)
         # Set up a clean output directory
         process.prepare_directory()
 
@@ -283,7 +283,7 @@ class SpectrumNoiseRemoveProcess:
         self.instance.generate_noise_removed_mgf()
 
 
-class XcorrMGFGenerateProcess:
+class XCorrMGFGenerateProcess:
     def __init__(self, config):
 
         """
@@ -292,7 +292,7 @@ class XcorrMGFGenerateProcess:
 
         self.mgf_directory = config['path']['mgf_path']  # Path to the directory containing original MGF files
         self.save_directory = config['path']['xcorr_mgf_path']  # Path to the directory for saving MGF files for Xcorr calculation
-        self.instance = XcorrMGFGenerator(self.mgf_directory, self.save_directory)  # Create an XcorrMGFGenerator instance
+        self.instance = XCorrMGFGenerator(self.mgf_directory, self.save_directory)  # Create an XCorrMGFGenerator instance
 
     def prepare_directory(self):
 
