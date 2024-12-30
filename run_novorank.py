@@ -137,4 +137,5 @@ if __name__ == '__main__':
         logging.info("Inference completed successfully.")
 
         # results saving
+        # top 10 results?
         inference.save_results()
