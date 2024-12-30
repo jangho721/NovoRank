@@ -17,19 +17,30 @@ For detailed insights behind NovoRank, refer to the [**NovoRank paper**]().
 NovoRank
   │ 
   ├─── generate_candidates_and_extract_features.py
+  │
+  ├─── run_novorank.py
   │ 
   ├─── src
   │     │     
   │     ├── features
-  │     │     └── FeatureProcessor.py: Functions for feature calculation
+  │     │     └── featureprocessor.py: Functions for feature calculation
   │     │       
   │     ├── loader
   │     │     └── dataloader.py: Functions for data loading
-  │     │  
+  │     │
+  │     ├── model
+  │     │     ├── base_model.py: Base model structure
+  │     │     ├── inference.py: Functions for model inference
+  │     │     ├── preprocess.py: Functions for data preprocessing in modeling
+  │     │     └── train.py: Functions for model training
+  │     │ 
   │     └─── utils
-  │           ├── config.py: Command-line argument parsing and configuration file loading
+  │           ├── config_first.py: Command-line argument parsing and configuration file loading for generate_candidates_and_extract_features.py
+  │           ├── config_second.py: Command-line argument parsing and configuration file loading for run_novorank.py
   │           ├── process.py: Functions for performing data processing
   │           └── utils.py: Utility functions providing support
+  │
+  ├─── models: Trained models (may include models saved at each epoch)
   │
   ├─── pretrained: Pretrained NovoRank models (Casanovo, PEAKS, pNovo3) in .h5 format
   │
