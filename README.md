@@ -90,6 +90,8 @@ MSCluster.exe --list [PATH] --output-name CLUSTERS --mixture-prob 0.01 --fragmen
 <br>
 
 - Step 2. Generate two candidates and extract features
+
+The parameter that controls the training process or the inference process is specified in the [config.yaml](https://github.com/jangho721/NovoRank/blob/main/config.yaml).  
 ```c
 python generate_candidates_and_extract_features.py --search_ppm [PRECURSOR_TOLERANCE] --elution_time [ELUTION_TIME_MIN]
 ```
@@ -106,10 +108,30 @@ CometX.exe -X -Pcomet.params [PATH]\*.mgf
 > `*_xcorr.tsv` files will be generated.
 <br>
 
+- Step 4. Training & Inference of the NovoRank  
+```c
+python run_novorank.py
+```
+> **Note:**  
+> To check the available options and their descriptions, run the command `python run_novorank.py -h`.
+<br>
+
+1. **Training**  
+If a user wants to use NovoRank customized for their de novo search software, they **HAVE TO** train the model (**RECOMMENDED**). Customizing the dataset is **OPTIONAL**.  
+The trained model is saved in the `./models/` directory in `.h5` format.
+<br>
+
+2. **Inference**  
+Inference can be performed using the pre-trained model, and the result of the inference is to output a single assigned peptide for each spectrum. The pre-trained models for testing, created using three types of *de novo* search software (Casanovo, PEAKS, pNovo3), are located in the `./pretrained/` directory.
+<br>
+The deep learning model only handles peptides with a maximum mass of 5000 Da and a length of 40 or less.
+
 ## Results
 <pre>
 - For the files specified in Data.Sample, *_cygated.csv files are generated.
 - The gating results are added to the last column, named 'Gated'.
+- TOP 10 결과는 안줌 top1결과만 줌
+    어느 파일에 저장됨
 </pre>
 
 ## Credits
