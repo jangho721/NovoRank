@@ -52,10 +52,13 @@ params:
   train: True
 
   # Whether to create a test dataset (True: create a test dataset, False: do not create)
+  # Used only in the training process.
   test_set: True
 
   # Whether to save the model checkpoint during training (True: save checkpoint every epoch, False: do not save)
+  # Used only in the training process.
   checkpoint: True
 
   # Whether to report the top 10 results (True: report top 10 candidate results, False: do not report)
+  # Used only in the inference process.
   top_10: False
