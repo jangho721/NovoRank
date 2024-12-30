@@ -28,7 +28,7 @@ path:
   # Path of a folder containing MS/MS spectra for XCorr calculation (MGF format)
   xcorr_mgf_path: ./data/processed/xcorr_mgf
 
-  # Filename for the interim report (Feature file)
+  # Filename for the interim report (Feature file: CSV)
   interim_report: dataset_top2.csv
 
   # Path of the XCorr calculation results from CometX
@@ -37,17 +37,25 @@ path:
   # Path where the trained model will be saved
   model_save:
     path: ./models
-    filename: novnorank.h5
+    filename: novnorank.h5 # (h5)
+
+  # Path to the pretrained model for inference
+  pretrained_model:
+    path: ./pretrained
+    filename: NovoRank_Casanovo.h5  # Example (h5)
+
+  # Filename for the final report (CSV)
+  final_report: result_top1.csv
 
 params:
   # Whether to train the model (True: training process, False: Inference process)
   train: True
 
-  # Whether to report the top 10 results (True: report top 10 candidate results, False: do not report)
-  top_10: False
-
   # Whether to create a test dataset (True: create a test dataset, False: do not create)
   test_set: True
 
   # Whether to save the model checkpoint during training (True: save checkpoint every epoch, False: do not save)
-  checkpoint: False
+  checkpoint: True
+
+  # Whether to report the top 10 results (True: report top 10 candidate results, False: do not report)
+  top_10: False

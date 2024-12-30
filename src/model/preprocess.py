@@ -6,9 +6,6 @@ import pandas as pd
 from numba import jit
 from sklearn.model_selection import GroupShuffleSplit
 
-# Suppress TensorFlow warnings
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -203,7 +200,7 @@ class InputDataGenerator:
     def generate_data(self, dataset):
 
         """
-        Generates input data for model training, validation, and inference by processing spectrum files and metadata.
+        Generates input data for model training, validation by processing spectrum files and metadata.
         """
 
         # Initialize variables for file processing
@@ -295,6 +292,123 @@ class InputDataGenerator:
                             'input_psm_features_y': psm_features_y,
                             'input_delta_features': delta_features
                         }, label_
+
+                        line_index += 1
+                        break
+
+                    # Collect peak data if it's a valid spectrum line
+                    if current_line.strip() and current_line.split()[0].replace('.', '', 1).isdigit():
+                        mz = float(current_line.split()[0])
+                        intensity = float(current_line.split()[1])
+                        loc = int(mz // self.mz_resolution)
+                        if loc <= self.max_length:
+                            spectrum[loc] += intensity
+
+                # Move to the next line
+                line_index += 1
+
+    def generate_inference_data(self, dataset, input_names):
+
+        """
+        Generates input data for inference by processing spectrum files and metadata.
+        """
+
+        # Unpack input names for clarity and convenience
+        input_spectrum = input_names[0]
+        input_sequence_x = input_names[1]
+        input_sequence_y = input_names[2]
+        input_psm_features_x = input_names[3]
+        input_psm_features_y = input_names[4]
+        input_delta_features = input_names[5]
+
+        # Initialize variables for file processing
+        current_file_index, line_index = 0, 0
+        current_file_data, current_spec_key = None, None
+        spectrum = None
+
+        # Sort the list of .mgf files in the directory
+        file_list = sorted(os.listdir(self.mgf_path))
+
+        # Generate input data for deep learning
+        for (
+                source_file, scan_number, peptide_x, peptide_y, charge, cscore_x, cscore_y, delta_cscore,
+                ifi_x, ifi_y, diff_rt_x, diff_rt_y, xcorr_x, xcorr_y, delta_xcorr
+            ) in dataset[['Source File', 'Scan number', 'Peptide_x', 'Peptide_y',
+                          'Charge_x', 'Score_x', 'Score_y', 'Delta Score_y',
+                          'Normalized Internal Fragment Ions_x', 'Normalized Internal Fragment Ions_y',
+                          'Difference_RT (min)_x', 'Difference_RT (min)_y',
+                          'XCorr_x', 'XCorr_y', 'Delta XCorr']].values:
+
+            # Extract spectrum identification details
+            file_base_name = source_file.split('.')[0]
+            scan_number = int(scan_number)
+            spec_key = (file_base_name, scan_number)
+
+            # Load data if not already loaded
+            if current_file_data is None:
+                current_file_name = file_list[current_file_index]
+                with open(f"{self.mgf_path}/{current_file_name}") as f:
+                    current_file_data = f.readlines()
+                line_index = 0
+
+            while True:
+                # If the current file has reached the end
+                if line_index >= len(current_file_data):
+                    current_file_index += 1
+
+                    # No more files to process
+                    if current_file_index >= len(file_list):
+                        logging.info("Reached the end of the files. No more data.")
+                        break
+                    current_file_name = file_list[current_file_index]
+                    with open(f"{self.mgf_path}/{current_file_name}") as f:
+                        current_file_data = f.readlines()
+                    line_index = 0
+
+                # Read the current line
+                current_line = current_file_data[line_index].strip()
+
+                if current_line.startswith('TITLE='):
+                    # Extract scan number and file name from the TITLE
+                    current_scan_number = int(current_line.split('.')[1])
+                    current_file_name = current_line.split('.')[0].split('=')[1]
+                    current_spec_key = (current_file_name, current_scan_number)
+
+                    # Skip to the next file if current file is alphabetically less than the base name
+                    if file_base_name > current_file_name:
+                        current_file_index += 1
+                        if current_file_index >= len(file_list):
+                            logging.info("Reached the end of the files. No more data.")
+                            break
+                        current_file_name = file_list[current_file_index]
+                        with open(f"{self.mgf_path}/{current_file_name}") as f:
+                            current_file_data = f.readlines()
+                        line_index = 0
+                        continue
+
+                    # Initialize the spectrum if the current spectrum matches
+                    if spec_key == current_spec_key:
+                        spectrum = self._initialize_spectrum(self.max_length)
+
+                if spec_key == current_spec_key:
+                    if current_line.startswith('END IONS'):
+                        # Normalize and encode the spectrum and metadata
+                        spectrum = self._normalize_spectrum(spectrum)
+                        sequence_x = self._encode_sequence(peptide_x, charge)
+                        sequence_y = self._encode_sequence(peptide_y, charge)
+                        psm_features_x = self._add_psm_features(cscore_x, ifi_x, diff_rt_x, xcorr_x)
+                        psm_features_y = self._add_psm_features(cscore_y, ifi_y, diff_rt_y, xcorr_y)
+                        delta_features = self._add_delta_features(delta_cscore, delta_xcorr)  # count
+
+                        # Yield the processed input data
+                        yield {
+                            input_spectrum: spectrum,
+                            input_sequence_x: sequence_x,
+                            input_sequence_y: sequence_y,
+                            input_psm_features_x: psm_features_x,
+                            input_psm_features_y: psm_features_y,
+                            input_delta_features: delta_features
+                        }
 
                         line_index += 1
                         break

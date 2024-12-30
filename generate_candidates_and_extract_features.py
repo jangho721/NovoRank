@@ -90,9 +90,6 @@ if __name__ == '__main__':
                                     configs['path']['interim_report']), index=False)
     logging.info(f"New dataset successfully saved as {configs['path']['interim_report']}.")
 
-    if configs['params']['top_10']:
-        pass
-
     logging.info("Proceeding to the next step:"
                  "\n\n1. Calculate the XCorr using CometX software"
                  "\n2. Execute run_novorank.py")

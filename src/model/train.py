@@ -1,11 +1,10 @@
 import os
 import logging
+import warnings
 import tensorflow as tf
 
 from tensorflow import keras
 from src.model.preprocess import *
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -52,6 +51,11 @@ class NovoRankTrainer:
         Converts the input data into a format suitable for training the model.
         """
 
+        output_type = ({
+            'input_spectrum': tf.float32, 'input_sequence_x': tf.float32, 'input_sequence_y': tf.float32,
+            'input_psm_features_x': tf.float32, 'input_psm_features_y': tf.float32,
+            'input_delta_features': tf.float32
+        }, tf.float32)
         input_shape = ({
             'input_spectrum': [50000], 'input_sequence_x': [40, 28], 'input_sequence_y': [40, 28],
             'input_psm_features_x': [4], 'input_psm_features_y': [4], 'input_delta_features': [2]
@@ -60,22 +64,14 @@ class NovoRankTrainer:
         # Training data generator
         self.gen_data_train = tf.data.Dataset.from_generator(
             lambda: self.input_generator.generate_data(self.train_data),
-            output_types=({
-                'input_spectrum': tf.float32, 'input_sequence_x': tf.float32, 'input_sequence_y': tf.float32,
-                'input_psm_features_x': tf.float32, 'input_psm_features_y': tf.float32,
-                'input_delta_features': tf.float32
-            }, tf.float32),
+            output_types=output_type,
             output_shapes=input_shape
         ).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
 
         # Validation data generator
         self.gen_data_val = tf.data.Dataset.from_generator(
             lambda: self.input_generator.generate_data(self.val_data),
-            output_types=({
-                'input_spectrum': tf.float32, 'input_sequence_x': tf.float32, 'input_sequence_y': tf.float32,
-                'input_psm_features_x': tf.float32, 'input_psm_features_y': tf.float32,
-                'input_delta_features': tf.float32
-            }, tf.float32),
+            output_types=output_type,
             output_shapes=input_shape
         ).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
 
@@ -120,7 +116,7 @@ class NovoRankTrainer:
                                            self.configs['path']['model_save']['filename'].split('.')[0]+'_{epoch}.h5')
 
             callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
-                                                          save_weights_only=False, verbose=1, save_freq=1)
+                                                          save_weights_only=False, verbose=0, save_freq=1)
 
             # Train the model with checkpoint callback
             history = self.model.fit(
@@ -147,9 +143,9 @@ class NovoRankTrainer:
         Saves the trained model to the specified path.
         """
 
-        logger.info(f"Saving model to {self.configs['path']['model_save']['filename']}...")
+        logger.info(f"Starting to save the model to {self.configs['path']['model_save']['path']}...")
 
         # Save the model
         self.model.save(os.path.join(self.configs['path']['model_save']['path'],
                                      self.configs['path']['model_save']['filename']))
-        logger.info(f"Model saved successfully as {self.configs['path']['model_save']['filename']}.")
+        logger.info(f"Model save process completed successfully. The model has been saved as {self.configs['path']['model_save']['filename']}.")

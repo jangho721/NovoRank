@@ -50,5 +50,5 @@ def load_config(config_path):
         raise TypeError(f"Path is not a file: {config_path}")
 
     # Load the configuration
-    with open(config_path, "r") as file:
+    with open(config_path, "r", encoding='utf-8') as file:
         return yaml.safe_load(file)

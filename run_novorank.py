@@ -1,17 +1,25 @@
 import os
+import warnings
 
 from src.model.train import *
+from src.model.inference import *
 from src.model.preprocess import *
 from src.model.base_model import *
 from src.loader.dataloader import *
-from src.utils import config_second
+from src.utils import config_second, utils
 
 # Ignore: warning, info massage
 # Print: error massage
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # Ignore: ALL massage
+# Suppress TensorFlow warnings
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+# Hide DeprecationWarnings occurring in Keras
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+# warnings.filterwarnings('ignore')
 
 # Future Tasks:
 # Specify input and output types for the function
@@ -22,7 +30,10 @@ if __name__ == '__main__':
     logging.info("Configuration loaded successfully.")
 
     # # Define classes
-    file_handler = FileHandler(os.path.join(configs['path']['save_path'], configs['path']['interim_report']))
+    interim_report_file_handler = FileHandler(os.path.join(configs['path']['save_path'],
+                                                           configs['path']['interim_report']))
+    de_novo_file_handler = FileHandler(os.path.join(configs['path']['search_results']['de_novo']['path'],
+                                                    configs['path']['search_results']['de_novo']['filename']))
     processor = CrossCorrelationResultProcessor(configs['path']['xcorr_results_path'])
     preparation = DataPreparation()
 
@@ -46,7 +57,7 @@ if __name__ == '__main__':
 
     logging.info("Starting dataset preparation process...")
     # Load the dataset and extract cross-correlation information
-    dataset = file_handler.load_csv()
+    dataset = interim_report_file_handler.load_csv()
     xcorr_df = processor.extract_cross_correlation_info()
 
     """
@@ -106,9 +117,24 @@ if __name__ == '__main__':
         # Model saving
         trainer.save_model()
     else:
-        pass
-    # else:
-    #     # Initiating the inference process
-    #     logging.info("Starting inference process...")
-    #     inference_df, above_max_seq_df, missing_xcorr_df = preparation.get_inference_dataset(dataset, xcorr_df)
+        # Load the de novo dataset
+        de_novo = de_novo_file_handler.load_csv()
 
+        # Initiating the inference process
+        logging.info("Starting inference process...")
+        inference_df, above_max_seq_df, missing_xcorr_df = preparation.get_inference_dataset(dataset, xcorr_df)
+
+        # Inference process definition
+        logging.info("Starting inference preparation...")
+        inference = NovoRankInference(inference_df, configs)
+        inference.preprocess()
+        inference.generator(batch_size)
+        logging.info("Inference preparation completed successfully.")
+
+        # Inference
+        logging.info("Starting inference...")
+        inference.run_inference(utils.top1(de_novo), above_max_seq_df, missing_xcorr_df)
+        logging.info("Inference completed successfully.")
+
+        # results saving
+        inference.save_results()

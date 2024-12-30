@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 from tensorflow import keras
-from tensorflow.keras.layers import Conv1D, LSTM, Bidirectional, Dense, Flatten # BatchNormalization
+from tensorflow.keras.layers import Conv1D, LSTM, Bidirectional, Dense, Flatten  # BatchNormalization
 from tensorflow.keras.layers import MaxPool1D, LeakyReLU, Dropout, Reshape, concatenate, Activation
 
 
@@ -56,13 +56,13 @@ class NovoRankModel:
 
         # First convolutional block
         conv = Conv1D(8, 30, strides=1, padding="valid")(spectrum_input)
-        conv = LeakyReLU(negative_slope=0.01)(conv)
+        conv = LeakyReLU(alpha=0.01)(conv)
         conv = Dropout(0.1)(conv)
         conv = MaxPool1D(pool_size=30, strides=30, padding='valid')(conv)
 
         # Second convolutional block
         conv = Conv1D(16, 30, strides=1, padding="valid")(conv)
-        conv = LeakyReLU(negative_slope=0.01)(conv)
+        conv = LeakyReLU(alpha=0.01)(conv)
         conv = Dropout(0.1)(conv)
         conv = MaxPool1D(pool_size=30, strides=30, padding='valid')(conv)
 
@@ -98,7 +98,7 @@ class NovoRankModel:
         """
 
         x = Dense(units)(input_layer)
-        x = LeakyReLU(negative_slope=leaky_relu_alpha)(x)
+        x = LeakyReLU(alpha=leaky_relu_alpha)(x)
         x = Dropout(dropout_rate)(x)
 
         return x
