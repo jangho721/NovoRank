@@ -158,7 +158,8 @@ class NovoRankInference:
         ranking_data['Peptide'] = ranking_data.apply(
             lambda ser: ser['Peptide_y'] if ser['Score_r'] >= threshold else ser['Peptide_x'], axis=1)
 
-        final_ranking = ranking_data[['Source File', 'Scan number', 'Peptide', 'Score_o']].rename(columns={'Score_o': 'Score'})
+        final_ranking = ranking_data[['Source File', 'Scan number', 'Peptide', 'Score_o']].rename(
+            columns={'Score_o': 'Score'})
 
         # Handle cases where only one peptide is available (either from the original or the ranking)
         original_only = ranking_data[ranking_data['Peptide_x'].notnull() & ranking_data['Peptide_y'].isnull()]
