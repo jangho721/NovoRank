@@ -117,21 +117,20 @@ python run_novorank.py
 <br>
 
 1. **Training**  
-If a user wants to use NovoRank customized for their de novo search software, they **HAVE TO** train the model (**RECOMMENDED**). Customizing the dataset is **OPTIONAL**.  
-The trained model is saved in the `./models/` directory in `.h5` format.
+To use NovoRank, users **must train a model tailored to their dataset** - it is **recommended** to use a customized model based on the *de novo* search software used.
+The trained model is saved in the `./models/` directory in `.h5` format. Additionally, checkpoint models trained at each epoch can be saved.
 <br>
 
 2. **Inference**  
-Inference can be performed using the pre-trained model, and the result of the inference is to output a single assigned peptide for each spectrum. The pre-trained models for testing, created using three types of *de novo* search software (Casanovo, PEAKS, pNovo3), are located in the `./pretrained/` directory.
+Inference can be performed using the pre-trained model. The pre-trained models for testing, created using three types of *de novo* search software (Casanovo, PEAKS, pNovo3), are located in the `./pretrained/` directory.
 <br>
 The deep learning model only handles peptides with a maximum mass of 5000 Da and a length of 40 or less.
 
 ## Results
 <pre>
-- For the files specified in Data.Sample, *_cygated.csv files are generated.
-- The gating results are added to the last column, named 'Gated'.
-- TOP 10 결과는 안줌 top1결과만 줌
-    어느 파일에 저장됨
+- The results_top1.csv file is generated at the .\data\interim location.
+  (The save location and result file name can be changed in the config.yaml file)
+- The NovoRank results are to output a single assigned peptide for each spectrum.
 </pre>
 
 ## Credits
