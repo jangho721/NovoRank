@@ -45,7 +45,7 @@ path:
     filename: NovoRank_Casanovo.h5  # Example (h5)
 
   # Filename for the final report (CSV)
-  final_report: result_top1.csv
+  final_report: results_top1.csv
 
 params:
   # Whether to train the model (True: training process, False: Inference process)
