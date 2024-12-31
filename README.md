@@ -128,7 +128,7 @@ The deep learning model only handles peptides with a maximum mass of 5000 Da and
 
 ## Results
 <pre>
-- The results_top1.csv file is generated at the .\data\interim location.
+- The results_top1.csv file is generated at the ./data/interim location.
   (The save location and result file name can be changed in the config.yaml file)
 - The NovoRank results are to output a single assigned peptide for each spectrum.
 </pre>
