@@ -7,7 +7,7 @@ For detailed insights behind NovoRank, refer to the [**NovoRank paper**](https:/
 <br>
 
 <p align="center">
-    <img src="assets/img.png" width="700"\>
+    <img src="assets/workflow.png" width="700">
 </p>
 <hr>
 
